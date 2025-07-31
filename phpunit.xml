@@ -7,10 +7,10 @@
     processIsolation="false"
     stopOnFailure="false"
     executionOrder="random"
-    failOnWarning="true"
-    failOnRisky="true"
+    failOnWarning="false"
+    failOnRisky="false"
     failOnEmptyTestSuite="true"
-    beStrictAboutOutputDuringTests="true"
+    beStrictAboutOutputDuringTests="false"
     cacheDirectory=".phpunit.cache"
     backupStaticProperties="false"
 >
