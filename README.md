@@ -87,7 +87,7 @@ composer require antikode/anti-cms-builder:dev-main
 
 The package will automatically register its service provider through Laravel's package discovery.
 
-### Publish Resources (Optional)
+### Publish Resources (Mandatory)
 
 If you want to customize the React components, publish them to your resources directory:
 
