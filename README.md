@@ -28,10 +28,61 @@ A powerful Laravel package for building dynamic CRUD interfaces with minimal boi
 
 ## Installation
 
-Install the package via Composer:
+> **Note**: This package is currently in development and not yet published to Packagist. The installation method below is not effective yet.
+
+### From Packagist (Not Available Yet)
 
 ```bash
 composer require antikode/anti-cms-builder
+```
+
+### From Private Repository
+
+Since this package is in a private repository, you need to add it to your `composer.json` manually:
+
+1. Add the repository to your `composer.json`:
+
+**For HTTPS (requires authentication token):**
+```json
+{
+    "repositories": [
+        {
+            "type": "vcs",
+            "url": "https://github.com/antikode/anti-cms-builder"
+        }
+    ]
+}
+```
+
+**For SSH (recommended):**
+```json
+{
+    "repositories": [
+        {
+            "type": "vcs",
+            "url": "git@github.com:antikode/anti-cms-builder.git"
+        }
+    ]
+}
+```
+
+2. **Authentication Setup:**
+
+**For HTTPS method:**
+- Create a GitHub Personal Access Token with repository access
+- Configure Composer authentication:
+```bash
+composer config github-oauth.github.com YOUR_GITHUB_TOKEN
+```
+
+**For SSH method (recommended):**
+- Ensure your SSH key is added to your GitHub account
+- Test SSH connection: `ssh -T git@github.com`
+
+3. Require the package:
+
+```bash
+composer require antikode/anti-cms-builder:dev-main
 ```
 
 The package will automatically register its service provider through Laravel's package discovery.
