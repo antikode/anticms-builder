@@ -10,7 +10,7 @@ class InputFieldTest extends TestCase
     public function test_can_create_input_field_instance()
     {
         $field = InputField::make();
-        
+
         $this->assertInstanceOf(InputField::class, $field);
     }
 
@@ -18,7 +18,7 @@ class InputFieldTest extends TestCase
     {
         $field = InputField::make()->name('test_field');
         $array = $field->toArray();
-        
+
         $this->assertEquals('input', $array['field']);
         $this->assertEquals('text', $array['attribute']['type']);
     }
@@ -27,7 +27,7 @@ class InputFieldTest extends TestCase
     {
         $field = InputField::make()->name('test_field')->max(100);
         $array = $field->toArray();
-        
+
         $this->assertEquals(100, $array['attribute']['max']);
         $this->assertEquals(100, $array['attribute']['maxLength']);
     }
@@ -36,7 +36,7 @@ class InputFieldTest extends TestCase
     {
         $field = InputField::make()->name('test_field')->min(5);
         $array = $field->toArray();
-        
+
         $this->assertEquals(5, $array['attribute']['min']);
         $this->assertEquals(5, $array['attribute']['minLength']);
     }
@@ -45,7 +45,7 @@ class InputFieldTest extends TestCase
     {
         $field = InputField::make()->name('test_field')->type('email');
         $array = $field->toArray();
-        
+
         $this->assertEquals('email', $array['attribute']['type']);
     }
 
@@ -59,9 +59,9 @@ class InputFieldTest extends TestCase
             ->required()
             ->max(255)
             ->min(5);
-        
+
         $array = $field->toArray();
-        
+
         $this->assertEquals('email', $array['name']);
         $this->assertEquals('Email Address', $array['label']);
         $this->assertEquals('email', $array['attribute']['type']);
@@ -75,7 +75,7 @@ class InputFieldTest extends TestCase
     {
         $field = InputField::make()->name('test_field');
         $array = $field->toArray();
-        
+
         $expectedDefaults = [
             'type' => 'text',
             'is_required' => false,
@@ -84,7 +84,7 @@ class InputFieldTest extends TestCase
             'defaultValue' => '',
             'value' => '',
         ];
-        
+
         foreach ($expectedDefaults as $key => $value) {
             $this->assertArrayHasKey($key, $array['attribute']);
             $this->assertEquals($value, $array['attribute'][$key]);
@@ -94,7 +94,7 @@ class InputFieldTest extends TestCase
     public function test_max_and_min_return_self_for_chaining()
     {
         $field = InputField::make();
-        
+
         $this->assertSame($field, $field->max(100));
         $this->assertSame($field, $field->min(5));
         $this->assertSame($field, $field->type('number'));

@@ -44,7 +44,7 @@ class RepeaterField extends FieldType
 
     public function relation(string|bool $formName = true, ?string $relationName = null): static
     {
-        $relationName = $relationName  ?? $this->name;
+        $relationName = $relationName ?? $this->name;
         // /** @var \Illuminate\Database\Eloquent\Model $instance */
         // $instance = app($class);
         //
@@ -54,7 +54,7 @@ class RepeaterField extends FieldType
         $this->attributes['relation'] = [
             // 'class' => $class,
             'relation' => $relationName,
-            'form_name' => $formName
+            'form_name' => $formName,
         ];
 
         return $this;

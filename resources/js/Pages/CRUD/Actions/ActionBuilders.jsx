@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, router } from "@inertiajs/react";
-import Builder from "@/Components/fields/Builder";
+import Builder from "../../../Components/fields/Builder.jsx";
 import Modal from "@/Components/Modal.jsx";
 
 /**

@@ -1,7 +1,7 @@
 import { pluck } from "@/lib/utils";
 import { Accordion } from "@/Components/ui/accordion";
-import Builder from "@/Components/fields/Builder";
-import Fields from "@/Components/fields/Fields";
+import Builder from "./Builder.jsx";
+import Fields from "@/Components/fields/Fields.jsx";
 
 export default function FieldBuilderComponent({ components, data, setData, errors, languages, defaultLanguage, selectedIndex, setSelectedIndex }) {
   const plucked = pluck(components, "keyName");

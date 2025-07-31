@@ -32,17 +32,17 @@ class AntiCmsBuilderServiceProvider extends ServiceProvider
         if ($this->app->runningInConsole()) {
             // Publish React components and resources
             $this->publishes([
-                __DIR__ . '/../resources/js' => resource_path('js/vendor/anti-cms-builder'),
+                __DIR__.'/../resources/js' => resource_path('js/vendor/anti-cms-builder'),
             ], 'anti-cms-builder-resources');
 
             // Publish config file
             $this->publishes([
-                __DIR__ . '/../config/anti-cms-builder.php' => config_path('anti-cms-builder.php'),
+                __DIR__.'/../config/anti-cms-builder.php' => config_path('anti-cms-builder.php'),
             ], 'anti-cms-builder-config');
         }
 
         // Merge config
-        $this->mergeConfigFrom(__DIR__ . '/../config/anti-cms-builder.php', 'anti-cms-builder');
+        $this->mergeConfigFrom(__DIR__.'/../config/anti-cms-builder.php', 'anti-cms-builder');
     }
 
     protected function bootRoutes(): void

@@ -5,9 +5,8 @@ namespace AntiCmsBuilder\Tests\Support;
 use AntiCmsBuilder\Forms\FormBuilder;
 use AntiCmsBuilder\Tables\TableBuilder;
 use AntiCmsBuilder\Traits\UseCrudController;
-use App\Http\Controllers\Controller;
 
-class TestController extends Controller
+class TestController
 {
     use UseCrudController;
 
@@ -17,7 +16,7 @@ class TestController extends Controller
     {
         return $builder->columns([
             ['column' => 'name', 'label' => 'Name'],
-            ['column' => 'email', 'label' => 'Email']
+            ['column' => 'email', 'label' => 'Email'],
         ]);
     }
 
@@ -25,7 +24,7 @@ class TestController extends Controller
     {
         return $builder->forms([
             ['field' => 'input', 'name' => 'name', 'label' => 'Name'],
-            ['field' => 'input', 'name' => 'email', 'label' => 'Email']
+            ['field' => 'input', 'name' => 'email', 'label' => 'Email'],
         ]);
     }
 }

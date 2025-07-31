@@ -56,4 +56,3 @@ class Section extends FieldType
         return $build;
     }
 }
-

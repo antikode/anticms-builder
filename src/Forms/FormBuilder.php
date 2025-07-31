@@ -2,12 +2,12 @@
 
 namespace AntiCmsBuilder\Forms;
 
+use AntiCmsBuilder\FieldService;
+use AntiCmsBuilder\Resolver;
 use App\Contracts\HasCustomField;
 use App\Models\File;
 use App\Models\Media;
 use App\Models\Translations\Translation;
-use AntiCmsBuilder\FieldService;
-use AntiCmsBuilder\Resolver;
 use App\Services\PostService;
 use App\Services\TemplateService;
 use Closure;
@@ -455,6 +455,7 @@ final class FormBuilder
                                                     'form' => $form,
                                                     'field' => $field,
                                                 ]);
+
                                                 continue;
                                             }
                                             // TODO: handle for media to save alt text

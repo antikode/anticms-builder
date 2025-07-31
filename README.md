@@ -1,5 +1,6 @@
 # AntiCmsBuilder
 
+[![CI](https://github.com/antikode/anti-cms-builder/workflows/CI/badge.svg)](https://github.com/antikode/anti-cms-builder/actions)
 [![Latest Version on Packagist](https://img.shields.io/packagist/v/antikode/anti-cms-builder.svg?style=flat-square)](https://packagist.org/packages/antikode/anti-cms-builder)
 [![Total Downloads](https://img.shields.io/packagist/dt/antikode/anti-cms-builder.svg?style=flat-square)](https://packagist.org/packages/antikode/anti-cms-builder)
 [![License](https://img.shields.io/packagist/l/antikode/anti-cms-builder.svg?style=flat-square)](https://packagist.org/packages/antikode/anti-cms-builder)

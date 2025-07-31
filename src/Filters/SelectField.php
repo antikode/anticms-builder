@@ -32,7 +32,7 @@ class SelectField extends FieldType
             'caption' => '',
             'query' => function (Builder $query, $column = null, $value = null) {
                 $query->where($column, $value);
-            }
+            },
         ];
     }
 

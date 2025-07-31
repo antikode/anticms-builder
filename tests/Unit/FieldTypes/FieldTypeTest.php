@@ -2,7 +2,6 @@
 
 namespace AntiCmsBuilder\Tests\Unit\FieldTypes;
 
-use AntiCmsBuilder\FieldTypes\FieldType;
 use AntiCmsBuilder\FieldTypes\InputField;
 use AntiCmsBuilder\Tests\TestCase;
 
@@ -12,7 +11,7 @@ class FieldTypeTest extends TestCase
     {
         $field = InputField::make()->name('test_field');
         $array = $field->toArray();
-        
+
         $this->assertEquals('test_field', $array['name']);
     }
 
@@ -20,7 +19,7 @@ class FieldTypeTest extends TestCase
     {
         $field = InputField::make()->name('test_field')->label('Test Label');
         $array = $field->toArray();
-        
+
         $this->assertEquals('Test Label', $array['label']);
     }
 
@@ -28,7 +27,7 @@ class FieldTypeTest extends TestCase
     {
         $field = InputField::make()->name('user_first_name');
         $array = $field->toArray();
-        
+
         $this->assertEquals('User First Name', $array['label']);
     }
 
@@ -36,7 +35,7 @@ class FieldTypeTest extends TestCase
     {
         $field = InputField::make()->name('test_field')->placeholder('Enter value');
         $array = $field->toArray();
-        
+
         $this->assertEquals('Enter value', $array['attribute']['placeholder']);
     }
 
@@ -44,7 +43,7 @@ class FieldTypeTest extends TestCase
     {
         $field = InputField::make()->name('test_field')->required();
         $array = $field->toArray();
-        
+
         $this->assertTrue($array['attribute']['is_required']);
     }
 
@@ -52,7 +51,7 @@ class FieldTypeTest extends TestCase
     {
         $field = InputField::make()->name('test_field')->disabled();
         $array = $field->toArray();
-        
+
         $this->assertTrue($array['attribute']['disabled']);
     }
 
@@ -60,7 +59,7 @@ class FieldTypeTest extends TestCase
     {
         $field = InputField::make()->name('test_field')->readonly();
         $array = $field->toArray();
-        
+
         $this->assertTrue($array['attribute']['readonly']);
     }
 
@@ -68,7 +67,7 @@ class FieldTypeTest extends TestCase
     {
         $field = InputField::make()->name('test_field')->value('test value');
         $array = $field->toArray();
-        
+
         $this->assertEquals('test value', $array['attribute']['value']);
     }
 
@@ -76,7 +75,7 @@ class FieldTypeTest extends TestCase
     {
         $field = InputField::make()->name('test_field')->defaultValue('default value');
         $array = $field->toArray();
-        
+
         $this->assertEquals('default value', $array['attribute']['defaultValue']);
     }
 
@@ -84,7 +83,7 @@ class FieldTypeTest extends TestCase
     {
         $field = InputField::make()->name('test_field')->caption('Help text');
         $array = $field->toArray();
-        
+
         $this->assertEquals('Help text', $array['attribute']['caption']);
     }
 
@@ -92,7 +91,7 @@ class FieldTypeTest extends TestCase
     {
         $field = InputField::make()->name('test_field')->multilanguage(true);
         $array = $field->toArray();
-        
+
         $this->assertTrue($array['multilanguage']);
     }
 
@@ -100,7 +99,7 @@ class FieldTypeTest extends TestCase
     {
         $field = InputField::make()->name('test_field');
         $array = $field->toArray();
-        
+
         $this->assertFalse($array['multilanguage']);
     }
 
@@ -108,7 +107,7 @@ class FieldTypeTest extends TestCase
     {
         $field = InputField::make()->name('test_field')->multilanguage(false);
         $array = $field->toArray();
-        
+
         $this->assertFalse($array['multilanguage']);
     }
 
@@ -117,7 +116,7 @@ class FieldTypeTest extends TestCase
         $rules = ['required', 'string', 'max:255'];
         $field = InputField::make()->name('test_field')->rules($rules);
         $array = $field->toArray();
-        
+
         $this->assertEquals($rules, $array['attribute']['rules']);
     }
 
@@ -126,7 +125,7 @@ class FieldTypeTest extends TestCase
         $messages = ['required' => 'This field is required'];
         $field = InputField::make()->name('test_field')->messages($messages);
         $array = $field->toArray();
-        
+
         $this->assertEquals($messages, $array['attribute']['messages']);
     }
 
@@ -136,9 +135,9 @@ class FieldTypeTest extends TestCase
             ->name('test_field')
             ->rule('required', 'This field is required')
             ->rule('max:255', 'Maximum 255 characters');
-        
+
         $array = $field->toArray();
-        
+
         $this->assertEquals(['required', 'max:255'], $array['attribute']['rules']);
         $this->assertIsArray($array['attribute']['messages']);
         $this->assertCount(2, $array['attribute']['messages']);
@@ -152,15 +151,15 @@ class FieldTypeTest extends TestCase
             ->placeholder('Enter test')
             ->required()
             ->multilanguage(true);
-        
+
         $array = $field->toArray();
-        
+
         $this->assertArrayHasKey('name', $array);
         $this->assertArrayHasKey('label', $array);
         $this->assertArrayHasKey('field', $array);
         $this->assertArrayHasKey('multilanguage', $array);
         $this->assertArrayHasKey('attribute', $array);
-        
+
         $this->assertEquals('test_field', $array['name']);
         $this->assertEquals('Test Field', $array['label']);
         $this->assertEquals('input', $array['field']);
@@ -171,7 +170,7 @@ class FieldTypeTest extends TestCase
     public function test_all_fluent_methods_return_self()
     {
         $field = InputField::make();
-        
+
         $this->assertSame($field, $field->name('test'));
         $this->assertSame($field, $field->label('Test'));
         $this->assertSame($field, $field->placeholder('Test'));

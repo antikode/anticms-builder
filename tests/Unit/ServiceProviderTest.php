@@ -10,7 +10,7 @@ class ServiceProviderTest extends TestCase
     public function test_service_provider_is_registered()
     {
         $providers = $this->app->getLoadedProviders();
-        
+
         $this->assertArrayHasKey(AntiCmsBuilderServiceProvider::class, $providers);
     }
 
@@ -23,7 +23,7 @@ class ServiceProviderTest extends TestCase
     {
         // Check if the command is available in console
         $commands = $this->app['Illuminate\Contracts\Console\Kernel']->all();
-        
+
         $this->assertArrayHasKey('page:build', $commands);
     }
 }

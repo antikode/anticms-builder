@@ -10,7 +10,7 @@ class SelectFieldTest extends TestCase
     public function test_can_create_select_field_instance()
     {
         $field = SelectField::make();
-        
+
         $this->assertInstanceOf(SelectField::class, $field);
     }
 
@@ -18,7 +18,7 @@ class SelectFieldTest extends TestCase
     {
         $field = SelectField::make()->name('test_field');
         $array = $field->toArray();
-        
+
         $this->assertEquals('select', $array['field']);
     }
 
@@ -26,12 +26,12 @@ class SelectFieldTest extends TestCase
     {
         $options = [
             ['value' => '1', 'label' => 'Option 1'],
-            ['value' => '2', 'label' => 'Option 2']
+            ['value' => '2', 'label' => 'Option 2'],
         ];
-        
+
         $field = SelectField::make()->name('test_field')->options($options);
         $array = $field->toArray();
-        
+
         $this->assertEquals($options, $array['attribute']['options']);
     }
 
@@ -39,7 +39,7 @@ class SelectFieldTest extends TestCase
     {
         $field = SelectField::make()->name('test_field');
         $array = $field->toArray();
-        
+
         $expectedDefaults = [
             'options' => [],
             'defaultValue' => '',
@@ -48,7 +48,7 @@ class SelectFieldTest extends TestCase
             'placeholder' => '',
             'caption' => '',
         ];
-        
+
         foreach ($expectedDefaults as $key => $value) {
             $this->assertArrayHasKey($key, $array['attribute']);
             $this->assertEquals($value, $array['attribute'][$key]);
@@ -59,7 +59,7 @@ class SelectFieldTest extends TestCase
     {
         $field = SelectField::make();
         $options = [['value' => '1', 'label' => 'Option 1']];
-        
+
         $this->assertSame($field, $field->options($options));
     }
 
@@ -67,18 +67,18 @@ class SelectFieldTest extends TestCase
     {
         $options = [
             ['value' => 'active', 'label' => 'Active'],
-            ['value' => 'inactive', 'label' => 'Inactive']
+            ['value' => 'inactive', 'label' => 'Inactive'],
         ];
-        
+
         $field = SelectField::make()
             ->name('status')
             ->label('Status')
             ->options($options)
             ->placeholder('Select status')
             ->required();
-        
+
         $array = $field->toArray();
-        
+
         $this->assertEquals('status', $array['name']);
         $this->assertEquals('Status', $array['label']);
         $this->assertEquals($options, $array['attribute']['options']);
@@ -90,7 +90,7 @@ class SelectFieldTest extends TestCase
     {
         $field = SelectField::make()->name('test_field');
         $array = $field->toArray();
-        
+
         $this->assertIsArray($array['attribute']['options']);
         $this->assertEmpty($array['attribute']['options']);
     }

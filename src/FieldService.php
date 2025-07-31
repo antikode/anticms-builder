@@ -2,7 +2,7 @@
 
 namespace AntiCmsBuilder;
 
-use App\Contracts\HasCustomField;
+use AntiCmsBuilder\Contracts\HasCustomField;
 use App\Services\CustomFieldService;
 
 final class FieldService

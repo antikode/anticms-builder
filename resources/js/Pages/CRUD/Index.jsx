@@ -7,7 +7,7 @@ import { useCallback, useEffect, useState } from "react";
 import { useMemo } from "react";
 import { debounce, pickBy } from "lodash";
 import { pluck } from "@/lib/utils";
-import Builder from "@/Components/fields/Builder";
+import Builder from "../../Components/fields/Builder.jsx";
 import ActionDropdown from "@/Components/ui/data-table/action-dropdown";
 import ActionBuilders from "./Actions/ActionBuilders";
 

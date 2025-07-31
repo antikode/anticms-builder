@@ -3,7 +3,6 @@
 namespace AntiCmsBuilder;
 
 use function Laravel\Prompts\confirm;
-use function Laravel\Prompts\form;
 use function Laravel\Prompts\select;
 use function Laravel\Prompts\text;
 

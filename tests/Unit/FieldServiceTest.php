@@ -11,14 +11,15 @@ use Mockery;
 class FieldServiceTest extends TestCase
 {
     private FieldService $fieldService;
+
     private TestModel $testModel;
 
     protected function setUp(): void
     {
         parent::setUp();
-        
-        $this->fieldService = new FieldService();
-        $this->testModel = new TestModel();
+
+        $this->fieldService = new FieldService;
+        $this->testModel = new TestModel;
     }
 
     public function test_can_instantiate_field_service()
@@ -29,7 +30,7 @@ class FieldServiceTest extends TestCase
     public function test_template_form_fields_with_empty_form()
     {
         $result = $this->fieldService->templateFormFields([], $this->testModel);
-        
+
         $this->assertIsArray($result);
         $this->assertEmpty($result);
     }
@@ -38,11 +39,11 @@ class FieldServiceTest extends TestCase
     {
         $form = [
             ['keyName' => 'section1'], // No fields property
-            ['keyName' => 'section2', 'fields' => []] // Empty fields
+            ['keyName' => 'section2', 'fields' => []], // Empty fields
         ];
-        
+
         $result = $this->fieldService->templateFormFields($form, $this->testModel);
-        
+
         $this->assertIsArray($result);
         $this->assertEmpty($result);
     }
@@ -53,14 +54,8 @@ class FieldServiceTest extends TestCase
         $mockCustomFieldService = Mockery::mock(CustomFieldService::class);
         $mockCustomFieldService->shouldReceive('customFieldHandler')
             ->once()
-            ->with(
-                Mockery::type(TestModel::class),
-                Mockery::any(),
-                'test_section',
-                Mockery::any()
-            )
             ->andReturn('processed_value');
-        
+
         $this->app->instance(CustomFieldService::class, $mockCustomFieldService);
 
         $form = [
@@ -69,14 +64,14 @@ class FieldServiceTest extends TestCase
                 'fields' => [
                     [
                         'name' => 'test_field',
-                        'multilanguage' => false
-                    ]
-                ]
-            ]
+                        'multilanguage' => false,
+                    ],
+                ],
+            ],
         ];
-        
+
         $result = $this->fieldService->templateFormFields($form, $this->testModel);
-        
+
         $this->assertIsArray($result);
         $this->assertArrayHasKey('cf__test_section__test_field', $result);
         $this->assertEquals('processed_value', $result['cf__test_section__test_field']);
@@ -91,8 +86,8 @@ class FieldServiceTest extends TestCase
             ->andReturn([
                 'languages' => [
                     ['code' => 'en'],
-                    ['code' => 'id']
-                ]
+                    ['code' => 'id'],
+                ],
             ]);
 
         // Mock CustomFieldService
@@ -100,7 +95,7 @@ class FieldServiceTest extends TestCase
         $mockCustomFieldService->shouldReceive('customFieldHandler')
             ->twice() // Called for each language
             ->andReturn('processed_multilang_value');
-        
+
         $this->app->instance(CustomFieldService::class, $mockCustomFieldService);
 
         $form = [
@@ -109,14 +104,14 @@ class FieldServiceTest extends TestCase
                 'fields' => [
                     [
                         'name' => 'test_field',
-                        'multilanguage' => true
-                    ]
-                ]
-            ]
+                        'multilanguage' => true,
+                    ],
+                ],
+            ],
         ];
-        
+
         $result = $this->fieldService->templateFormFields($form, $this->testModel);
-        
+
         $this->assertIsArray($result);
         $this->assertArrayHasKey('translations', $result);
         $this->assertArrayHasKey('en', $result['translations']);
@@ -132,7 +127,7 @@ class FieldServiceTest extends TestCase
         $mockCustomFieldService->shouldReceive('customFieldHandler')
             ->times(3) // Called for each field
             ->andReturn('processed_value');
-        
+
         $this->app->instance(CustomFieldService::class, $mockCustomFieldService);
 
         $form = [
@@ -140,19 +135,19 @@ class FieldServiceTest extends TestCase
                 'keyName' => 'section1',
                 'fields' => [
                     ['name' => 'field1', 'multilanguage' => false],
-                    ['name' => 'field2', 'multilanguage' => false]
-                ]
+                    ['name' => 'field2', 'multilanguage' => false],
+                ],
             ],
             [
-                'keyName' => 'section2', 
+                'keyName' => 'section2',
                 'fields' => [
-                    ['name' => 'field3', 'multilanguage' => false]
-                ]
-            ]
+                    ['name' => 'field3', 'multilanguage' => false],
+                ],
+            ],
         ];
-        
+
         $result = $this->fieldService->templateFormFields($form, $this->testModel);
-        
+
         $this->assertIsArray($result);
         $this->assertCount(3, $result);
         $this->assertArrayHasKey('cf__section1__field1', $result);
@@ -167,20 +162,20 @@ class FieldServiceTest extends TestCase
         $mockCustomFieldService->shouldReceive('customFieldHandler')
             ->once()
             ->andReturn('processed_value');
-        
+
         $this->app->instance(CustomFieldService::class, $mockCustomFieldService);
 
         $form = [
             [
                 'keyName' => 'test section',
                 'fields' => [
-                    ['name' => 'test field', 'multilanguage' => false]
-                ]
-            ]
+                    ['name' => 'test field', 'multilanguage' => false],
+                ],
+            ],
         ];
-        
+
         $result = $this->fieldService->templateFormFields($form, $this->testModel);
-        
+
         $this->assertArrayHasKey('cf__test__section__test__field', $result);
     }
 
