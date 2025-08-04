@@ -2,9 +2,11 @@
 
 namespace AntiCmsBuilder\Contracts;
 
+use Illuminate\Database\Eloquent\Collection;
+
 interface HasCustomField
 {
-    public function getCustomFieldsAttribute(): array;
+    public function customFields(): \Illuminate\Database\Eloquent\Relations\MorphMany;
 
-    public function setCustomFieldsAttribute($value): void;
+    public function getRootCustomFields(): Collection;
 }
