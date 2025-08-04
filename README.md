@@ -33,7 +33,7 @@ A powerful Laravel package for building dynamic CRUD interfaces with minimal boi
 ### From Packagist (Not Available Yet)
 
 ```bash
-composer require antikode/anti-cms-builder
+composer require antikode/anticms-builder
 ```
 
 ### From Private Repository
@@ -48,7 +48,7 @@ Since this package is in a private repository, you need to add it to your `compo
     "repositories": [
         {
             "type": "vcs",
-            "url": "https://github.com/antikode/anti-cms-builder"
+            "url": "https://github.com/antikode/anticms-builder.git"
         }
     ]
 }
@@ -60,7 +60,7 @@ Since this package is in a private repository, you need to add it to your `compo
     "repositories": [
         {
             "type": "vcs",
-            "url": "git@github.com:antikode/anti-cms-builder.git"
+            "url": "git@github.com:antikode/anticms-builder.git"
         }
     ]
 }
@@ -87,7 +87,7 @@ composer require antikode/anti-cms-builder:dev-main
 
 The package will automatically register its service provider through Laravel's package discovery.
 
-### Publish Resources (Optional)
+### Publish Resources (Mandatory)
 
 If you want to customize the React components, publish them to your resources directory:
 
