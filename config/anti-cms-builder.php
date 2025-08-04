@@ -14,6 +14,7 @@ return [
         'file' => 'App\\Models\\File',
         'media' => 'App\\Models\\Media',
         'translation' => 'App\\Models\\Translations\\Translation',
+        'custom_field' => 'App\\Models\\CustomField\\CustomField',
     ],
 
     /*

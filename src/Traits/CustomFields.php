@@ -8,7 +8,7 @@ trait CustomFields
 {
     public function customFields(): \Illuminate\Database\Eloquent\Relations\MorphMany
     {
-        return $this->morphMany(config('antin-cms-builder.services.custom_field', 'App\\Services\\CustomFieldService'), 'model');
+        return $this->morphMany(config('antin-cms-builder.models.custom_field', 'App\\Models\\CustomField\\CustomField'), 'model');
     }
 
     public function getRootCustomFields(): Collection
