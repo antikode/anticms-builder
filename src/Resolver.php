@@ -17,7 +17,7 @@ class Resolver
 
         foreach ($ref->getParameters() as $key => $param) {
             $name = $param->getName();
-            if (! $param->getType()->isBuiltin()) {
+            if ($param->getType() && ! $param->getType()->isBuiltin()) {
                 if ($param->getType()->getName() == (is_string($model) ? $model : $model::class)) {
                     if ($model instanceof Model) {
                         $args[$key] = $model;
