@@ -15,7 +15,12 @@ use Inertia\Inertia;
 
 trait UseCrudController
 {
-    protected $actions = [];
+    public function __construct()
+    {
+        if (! property_exists($this, 'model')) {
+            throw new Exception('Please define the $model property in your controller.');
+        }
+    }
 
     private function getDefaultSharedResource(): string
     {
@@ -40,9 +45,11 @@ trait UseCrudController
     private function bootsrapp(): void
     {
         $this->setInertiaResource();
-        $this->actions = $this->addAction();
     }
 
+    /**
+    * @deprecated Use tables() method in the controller instead
+     */
     protected function addAction(): array
     {
         return [];
@@ -57,25 +64,48 @@ trait UseCrudController
         ];
     }
 
-    private function permisssionCheck(): array
+    protected function canSeeIndex(): bool
     {
-        $hasCreatePermission = true;
-        $hasEditPermission = true;
-        $hasDeletePermission = true;
-        if (Gate::getPolicyFor($this->model) && method_exists(Gate::getPolicyFor($this->model), 'create')) {
-            $hasCreatePermission = Gate::allows('create', $this->model);
-        }
-        if (Gate::getPolicyFor($this->model) && method_exists(Gate::getPolicyFor($this->model), 'update')) {
-            $hasEditPermission = Gate::allows('update', $this->model);
-        }
-        if (Gate::getPolicyFor($this->model) && method_exists(Gate::getPolicyFor($this->model), 'delete')) {
-            $hasDeletePermission = Gate::allows('delete', $this->model);
+        if (Gate::getPolicyFor($this->model) && method_exists(Gate::getPolicyFor($this->model), 'viewAny')) {
+            return Gate::allows('viewAny', $this->model);
         }
 
+        return true;
+    }
+
+    protected function canCreate(): bool
+    {
+        if (Gate::getPolicyFor($this->model) && method_exists(Gate::getPolicyFor($this->model), 'create')) {
+            return Gate::allows('create', $this->model);
+        }
+
+        return true;
+    }
+
+    protected function canUpdate($data = null): bool
+    {
+        if (Gate::getPolicyFor($this->model) && method_exists(Gate::getPolicyFor($this->model), 'update')) {
+            return Gate::allows('update', $data ?? $this->model);
+        }
+
+        return true;
+    }
+
+    protected function canDelete($data = null): bool
+    {
+        if (Gate::getPolicyFor($this->model) && method_exists(Gate::getPolicyFor($this->model), 'delete')) {
+            return Gate::allows('delete', $data ?? $this->model);
+        }
+
+        return true;
+    }
+
+    private function permisssionCheck(): array
+    {
         return [
-            'hasCreatePermission' => $hasCreatePermission,
-            'hasEditPermission' => $hasEditPermission,
-            'hasDeletePermission' => $hasDeletePermission,
+            'hasCreatePermission' => $this->canCreate(),
+            'hasEditPermission' => $this->canUpdate(),
+            'hasDeletePermission' => $this->canDelete(),
         ];
     }
 
@@ -146,8 +176,8 @@ trait UseCrudController
     {
         $permissions = $this->permisssionCheck();
 
-        if (Gate::getPolicyFor($this->model) && method_exists(Gate::getPolicyFor($this->model), 'viewAny')) {
-            Gate::authorize('viewAny', $this->model);
+        if (! $this->canSeeIndex()) {
+            abort(403);
         }
 
         $this->bootsrapp();
@@ -156,10 +186,9 @@ trait UseCrudController
             ->tables(TableBuilder::make($this->model))
             ->build();
 
-        return Inertia::render('Packages/AntiCmsBuilder/CRUD/Index', [
+        return Inertia::render('CRUD/Index', [
             'tables' => $tables,
             'permissions' => $permissions,
-            'actions' => $this->actions,
         ]);
     }
 
@@ -168,8 +197,8 @@ trait UseCrudController
      */
     public function create()
     {
-        if (Gate::getPolicyFor($this->model) && method_exists(Gate::getPolicyFor($this->model), 'create')) {
-            $this->authorize('create', $this->model);
+        if (! $this->canCreate()) {
+            abort(403);
         }
 
         $this->bootsrapp();
@@ -177,7 +206,7 @@ trait UseCrudController
         $forms = $this->forms(FormBuilder::make($this->model)->loadValues())
             ->getForms();
 
-        return Inertia::render('Packages/AntiCmsBuilder/CRUD/Create', [
+        return Inertia::render('CRUD/Create', [
             'customFields' => $forms,
             'statusOptions' => $this->statusOptions(),
         ]);
@@ -269,8 +298,8 @@ trait UseCrudController
     public function edit($id)
     {
         $data = $this->model::find($id);
-        if (Gate::getPolicyFor($this->model) && method_exists(Gate::getPolicyFor($this->model), 'update')) {
-            $this->authorize('update', $data);
+        if (! $this->canUpdate($data)) {
+            abort(403);
         }
         $this->bootsrapp();
 
@@ -288,7 +317,7 @@ trait UseCrudController
         $fields = $formBuilder->getFields($data);
         $customFields = $formBuilder->getForms();
 
-        return Inertia::render('Packages/AntiCmsBuilder/CRUD/Edit', [
+        return Inertia::render('CRUD/Edit', [
             'resources' => $data,
             'fields' => $fields,
             'customFields' => $customFields,
@@ -313,8 +342,8 @@ trait UseCrudController
     public function update(Request $request, $id)
     {
         $data = $this->model::find($id);
-        if (Gate::getPolicyFor($this->model) && method_exists(Gate::getPolicyFor($this->model), 'update')) {
-            $this->authorize('update', $data);
+        if (! $this->canUpdate($data)) {
+            abort(403);
         }
         $this->bootsrapp();
 
@@ -356,8 +385,8 @@ trait UseCrudController
     public function delete($id)
     {
         $data = $this->model::find($id);
-        if (Gate::getPolicyFor($this->model) && method_exists(Gate::getPolicyFor($this->model), 'delete')) {
-            $this->authorize('delete', $data);
+        if (! $this->canDelete($data)) {
+            abort(403);
         }
         $this->bootsrapp();
         $tableName = ($data)->getTable();
@@ -378,8 +407,8 @@ trait UseCrudController
     public function forceDelete(string $id)
     {
         $this->bootsrapp();
-        if (Gate::getPolicyFor($this->model) && method_exists(Gate::getPolicyFor($this->model), 'delete')) {
-            $this->authorize('delete', $this->model);
+        if (! $this->canDelete()) {
+            abort(403);
         }
         $this->model::where('id', $id)->withTrashed()->forceDelete();
 
@@ -393,7 +422,9 @@ trait UseCrudController
     public function restore(string $id)
     {
         $this->bootsrapp();
-        $this->authorize('restore', $this->model);
+        if (! $this->canUpdate()) {
+            abort(403);
+        }
         $this->model::where('id', $id)->withTrashed()->restore();
 
         return back();

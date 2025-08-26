@@ -10,22 +10,24 @@ class Resolver
     {
         $ref = new \ReflectionFunction(\Closure::fromCallable($function));
         $args = [];
+
+        $modelInstance = $model instanceof Model ? $model : $this->getRecord($model);
+
         $availableParams = array_merge([
             'operation' => $this->getOperation(),
-            'record' => is_string($model) ? $this->getRecord($model) : $model,
+            'record' => $modelInstance,
         ], $addedParams);
 
         foreach ($ref->getParameters() as $key => $param) {
             $name = $param->getName();
             if ($param->getType() && ! $param->getType()->isBuiltin()) {
-                if ($param->getType()->getName() == (is_string($model) ? $model : $model::class)) {
-                    if ($model instanceof Model) {
-                        $args[$key] = $model;
-                    } else {
-                        $args[$key] = $this->getRecord($param->getType()->getName());
-                    }
+                $paramTypeName = $param->getType()->getName();
+                $modelClassName = is_string($model) ? $model : $model::class;
+
+                if ($paramTypeName == $modelClassName) {
+                    $args[$key] = $modelInstance;
                 } else {
-                    $args[$key] = $availableParams[$name] ?? app($param->getType()->getName());
+                    $args[$key] = $availableParams[$name] ?? app($paramTypeName);
                 }
             } else {
                 $args[$key] = $availableParams[$name] ?? null;
@@ -40,7 +42,9 @@ class Resolver
         $record = new $model;
         if ($this->getOperation() == 'update') {
             $id = request()->route()->parameter('id');
-            $record = $model::find($id);
+            if ($id) {
+                $record = $model::find($id);
+            }
         }
 
         return $record;

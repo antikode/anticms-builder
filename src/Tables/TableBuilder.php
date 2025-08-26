@@ -2,6 +2,10 @@
 
 namespace AntiCmsBuilder\Tables;
 
+use AntiCmsBuilder\Resolver;
+use AntiCmsBuilder\Tables\Actions\BulkAction;
+use AntiCmsBuilder\Tables\Actions\RowAction;
+use AntiCmsBuilder\Tables\Actions\TableAction;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Arr;
@@ -99,11 +103,16 @@ final class TableBuilder
 
         $paging = $query->paginate($request->limit ?? 10);
 
-        /** @var Model $item */
-        foreach ($paging as $keyI => $item) {
-            $tables['meta'] = $paging->toArray();
+        // Set meta data once
+        $tables['meta'] = $paging->toArray();
+
+        // Process headers once
+        foreach ($tables['headers'] as $key => $table) {
+            $tables['headers'][$key]['accessorKey'] = $table['id'];
+        }
+
+        foreach ($paging->items() as $keyI => $item) {
             foreach ($tables['headers'] as $key => $table) {
-                $tables['headers'][$key]['accessorKey'] = $table['id'];
                 if (str($table['column'])->contains('.')) {
                     $explode = str($table['column'])->explode('.');
                     /** @var Model|Collection<int, Model> $relation */
@@ -145,6 +154,26 @@ final class TableBuilder
             }
             $tables['rows'][$keyI]['id'] = $item->getKey();
             $tables['rows'][$keyI]['deleted_at'] = $item->deleted_at;
+
+            // Process row actions for each item
+            if (isset($this->tables['rowActions'])) {
+                $tables['rows'][$keyI]['_actions'] = $this->processRowActions($item);
+            }
+        }
+
+        // Process table-level actions
+        if (isset($this->tables['actions'])) {
+            $tables['actions'] = $this->processTableActions();
+        }
+
+        // Process bulk actions
+        if (isset($this->tables['bulkActions'])) {
+            $tables['bulkActions'] = $this->processBulkActions();
+        }
+
+        // Remove unprocessed rowActions to prevent Inertia from evaluating closures
+        if (isset($this->tables['rowActions'])) {
+            unset($tables['rowActions']);
         }
 
         return $tables;
@@ -183,5 +212,101 @@ final class TableBuilder
         $this->tables['noAction'] = $noAction;
 
         return $this;
+    }
+
+    public function actions(array $actions): self
+    {
+        $this->tables['actions'] = $actions;
+
+        return $this;
+    }
+
+    public function bulkActions(array $bulkActions): self
+    {
+        $this->tables['bulkActions'] = $bulkActions;
+
+        return $this;
+    }
+
+    public function rowActions(array $rowActions): self
+    {
+        $this->tables['rowActions'] = $rowActions;
+
+        return $this;
+    }
+
+    private function processTableActions(): array
+    {
+        $processed = [];
+        $resolver = app(Resolver::class);
+
+        foreach ($this->tables['actions'] as $action) {
+            if ($action instanceof TableAction) {
+                $actionData = $action->toArray();
+                if (! $this->shouldHideAction($actionData)) {
+                    $processed[] = $actionData;
+                }
+            } else {
+                $processed[] = $action;
+            }
+        }
+
+        return $processed;
+    }
+
+    private function processBulkActions(): array
+    {
+        $processed = [];
+        $resolver = app(Resolver::class);
+
+        foreach ($this->tables['bulkActions'] as $action) {
+            if ($action instanceof BulkAction) {
+                $actionData = $action->toArray();
+                if (! $this->shouldHideAction($actionData)) {
+                    $processed[] = $actionData;
+                }
+            } else {
+                $processed[] = $action;
+            }
+        }
+
+        return $processed;
+    }
+
+    private function processRowActions($model): array
+    {
+        $processed = [];
+        $resolver = app(Resolver::class);
+
+        foreach ($this->tables['rowActions'] as $action) {
+            $actionData = $action;
+            if ($action instanceof RowAction) {
+                $actionData = $action->toArray();
+            }
+            if (isset($actionData['route'])) {
+                if ($actionData['route'] instanceof \Closure) {
+                    $args = $resolver->params($model, $actionData['route']);
+                    $actionData['route'] = $actionData['route'](...$args);
+                }
+            }
+            if (! $this->shouldHideAction($actionData, $model)) {
+                $processed[] = $actionData;
+            }
+        }
+
+        return $processed;
+    }
+
+    private function shouldHideAction(array $actionData, $model = null): bool
+    {
+        if (isset($actionData['permission']) && ! auth()->user()->can($actionData['permission'])) {
+            return true;
+        }
+
+        if (isset($actionData['condition']) && ! $actionData['condition']($model)) {
+            return true;
+        }
+
+        return $actionData['hide'] ?? false;
     }
 }

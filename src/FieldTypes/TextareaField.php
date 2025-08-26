@@ -37,4 +37,18 @@ class TextareaField extends FieldType
             'value' => '',
         ];
     }
+
+    public function rows(int $rows = 5): static
+    {
+        $this->attributes['rows'] = $rows;
+
+        return $this;
+    }
+
+    public function cols(int $cols = 50): static
+    {
+        $this->attributes['cols'] = $cols;
+
+        return $this;
+    }
 }

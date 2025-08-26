@@ -9,13 +9,16 @@ import { debounce, pickBy } from "lodash";
 import { pluck } from "@/lib/utils";
 import Builder from "../../Components/fields/Builder.jsx";
 import ActionDropdown from "@/Components/ui/data-table/action-dropdown";
-import ActionBuilders from "./Actions/ActionBuilders";
+import DynamicTableActions from "../../Components/Table/DynamicTableActions.jsx";
+import DynamicRowActions from "../../Components/Table/DynamicRowActions.jsx";
+import { Button } from "@/Components/ui/button";
 
 export default function Index({ title, tables, resource, actions, permissions, HasEditPermission, HasDeletePermission }) {
   const { filtered } = tables;
   const [params, setParams] = useState(filtered);
   const { languages, defaultLanguage } = usePage().props.app.languages;
   const [selectedIndex, setSelectedIndex] = useState(0);
+  const [selectedRows, setSelectedRows] = useState({});
   const headers = useMemo(() => {
     const cols = tables.headers.map((header) => {
       const headerTitle = header.header;
@@ -63,6 +66,10 @@ export default function Index({ title, tables, resource, actions, permissions, H
           const origin = row.original;
           const id = row.original.id;
           const rowData = { ...origin, id };
+
+          if (rowData._actions && rowData._actions.length > 0) {
+            return <DynamicRowActions actions={rowData._actions} row={rowData} />;
+          }
 
           const actions = [
             {
@@ -150,36 +157,53 @@ export default function Index({ title, tables, resource, actions, permissions, H
     <AuthenticatedLayout header={title}>
       <CardWhite breadcrumbs={true}>
         <Heading title={title}>
-          <ActionBuilders actions={actions} languages={languages} defaultLanguage={defaultLanguage} />
+          {(tables.actions || tables.bulkActions) && (
+            <div className="">
+              <DynamicTableActions
+                actions={[...(tables.actions || []), ...(tables.bulkActions || [])]}
+                selectedRows={selectedRows}
+                onBulkActionStart={(action, selectedIds) => {
+                  console.log('Bulk action started:', action.name, selectedIds);
+                }}
+                onBulkActionComplete={(action, selectedIds) => {
+                  console.log('Bulk action completed:', action.name, selectedIds);
+                  setSelectedRows({});
+                }}
+              />
+            </div>
+          )}
           {permissions.hasCreatePermission && (
             <Link href={route(`${resource}.create`)} className={`btn_primary text-sm`}>
-              Create {title}
+              <Button>Create {title}</Button>
             </Link>
           )}
-
         </Heading>
+
+        {/* Dynamic table actions */}
         <DataTable
           params={params}
           setParams={setParams}
           columns={headers}
           data={tables?.rows}
           filter={
-            <>
-              {tables?.filter?.filter(item => !plucked.includes(item.keyName)).map((item, index) => (
-                <Builder
-                  hideLabel={true}
-                  key={index}
-                  data={params}
-                  setData={setParams}
-                  item={item}
-                  // errors={errors}
-                  languages={languages}
-                  defaultLanguage={defaultLanguage}
-                  selectedIndex={selectedIndex}
-                  setSelectedIndex={setSelectedIndex}
-                />
-              ))}
-            </>
+            (!tables?.filter || tables.filter.length === 0) ? null : (
+              <>
+                {tables.filter.filter(item => !plucked.includes(item.keyName)).map((item, index) => (
+                  <Builder
+                    hideLabel={true}
+                    key={index}
+                    data={params}
+                    setData={setParams}
+                    item={item}
+                    // errors={errors}
+                    languages={languages}
+                    defaultLanguage={defaultLanguage}
+                    selectedIndex={selectedIndex}
+                    setSelectedIndex={setSelectedIndex}
+                  />
+                ))}
+              </>
+            )
           }
           pagination={tables?.meta}
         />

@@ -5,26 +5,33 @@
 [![Total Downloads](https://img.shields.io/packagist/dt/antikode/anti-cms-builder.svg?style=flat-square)](https://packagist.org/packages/antikode/anti-cms-builder)
 [![License](https://img.shields.io/packagist/l/antikode/anti-cms-builder.svg?style=flat-square)](https://packagist.org/packages/antikode/anti-cms-builder)
 
-A powerful Laravel package for building dynamic CRUD interfaces with minimal boilerplate code. This package provides form builders, table builders, and React components to accelerate development while ensuring consistency across your application.
+A powerful Laravel package for building dynamic CRUD interfaces with minimal boilerplate code. This package provides form builders, table builders, React components, and advanced custom field management to accelerate development while ensuring consistency across your application.
 
 ## Features
 
 - 🚀 **Rapid CRUD Development** - Build complete CRUD interfaces in minutes
 - 📝 **Dynamic Form Builder** - Create complex forms with JSON configuration
-- 📊 **Advanced Table Builder** - Sortable, searchable, filterable data tables
-- 🌍 **Multilingual Support** - Built-in translation management
+- 📊 **Advanced Table Builder** - Sortable, searchable, filterable data tables with dynamic actions
+- 🌍 **Multilingual Support** - Built-in translation management with language tabs
 - ⚛️ **React Components** - Pre-built UI components for Inertia.js
-- 🔧 **Extensible** - Easy to customize and extend
+- 🔧 **Extensible** - Easy to customize and extend with custom field types
 - 🎯 **Laravel 11 Ready** - Full compatibility with latest Laravel
+- 🗂️ **Custom Fields System** - Template-based custom field management with hierarchical structure
+- 📋 **Field Builder Component** - Interactive field builder for dynamic form creation
+- 🎨 **Rich Text Editor** - Built-in WYSIWYG editor support
+- ⚙️ **Configuration Management** - Comprehensive configuration system for models, services, and languages
 
 ## Table of Contents
 
 1. [Installation](#installation)
 2. [Quick Start](#quick-start)
-3. [FormBuilder Documentation](#formbuilder-documentation)
-4. [TableBuilder Usage](#tablebuilder-usage)
-5. [React Components](#react-components)
-6. [Advanced Features](#advanced-features)
+3. [Configuration](#configuration)
+4. [FormBuilder Documentation](#formbuilder-documentation)
+5. [TableBuilder Usage](#tablebuilder-usage)
+6. [React Components](#react-components)
+7. [Custom Fields System](#custom-fields-system)
+8. [Console Commands](#console-commands)
+9. [Advanced Features](#advanced-features)
 
 ## Installation
 
@@ -87,6 +94,16 @@ composer require antikode/anti-cms-builder:dev-main
 
 The package will automatically register its service provider through Laravel's package discovery.
 
+### Database Migration
+
+If your models use custom fields, ensure you have the necessary database tables. The package expects:
+
+- A `custom_fields` table for storing custom field data
+- A `translations` table for multilingual content
+- Media/file tables if using file uploads
+
+Refer to your application's migration files or create them based on your model requirements.
+
 ### Publish Resources (Mandatory)
 
 If you want to customize the React components, publish them to your resources directory:
@@ -113,10 +130,37 @@ php artisan vendor:publish --tag=anti-cms-builder-config
 
 This will create a `config/anti-cms-builder.php` file where you can customize:
 
-- Default models for File, Media, and Translation
-- Service implementations
-- Default and available languages
-- File upload settings
+```php
+return [
+    // Default models used by the package
+    'models' => [
+        'file' => 'App\\Models\\File',
+        'media' => 'App\\Models\\Media',
+        'translation' => 'App\\Models\\Translations\\Translation',
+        'custom_field' => 'App\\Models\\CustomField\\CustomField',
+    ],
+
+    // Service implementations
+    'services' => [
+        'post' => 'App\\Services\\PostService',
+        'template' => 'App\\Services\\TemplateService',
+        'custom_field' => 'App\\Services\\CustomFieldService',
+    ],
+
+    // Language settings
+    'default_language' => 'en',
+    'languages' => [
+        'en' => 'English',
+        'ar' => 'Arabic',
+    ],
+
+    // File upload configuration
+    'uploads' => [
+        'disk' => 'public',
+        'path' => 'uploads',
+    ],
+];
+```
 
 ## Usage
 
@@ -225,6 +269,13 @@ TextareaField::make()
     ->multilanguage()
     ->toArray(),
 
+// Rich Text Editor
+TexteditorField::make()
+    ->name('content')
+    ->label('Content')
+    ->multilanguage()
+    ->toArray(),
+
 // Select Field
 SelectField::make()
     ->name('category_id')
@@ -309,11 +360,56 @@ public function forms(FormBuilder $builder): FormBuilder
 
 ## Testing
 
-Run the tests with:
+The package includes comprehensive tests covering all major functionality.
+
+### Running Tests
+
+Run the full test suite:
 
 ```bash
 composer test
 ```
+
+Or run specific test groups:
+
+```bash
+# Run only unit tests
+./vendor/bin/phpunit tests/Unit
+
+# Run only feature tests  
+./vendor/bin/phpunit tests/Feature
+
+# Run with coverage
+./vendor/bin/phpunit --coverage-html coverage
+```
+
+### Test Structure
+
+- **Unit Tests**: Test individual classes and methods
+  - `FieldTypes/`: Tests for all field type classes
+  - `Tables/`: Tests for table builder functionality
+  - Core service tests (FieldService, FormBuilder, TableBuilder)
+
+- **Feature Tests**: Test complete workflows
+  - `UseCrudControllerTest.php`: End-to-end CRUD operations
+
+- **Support Files**: Test models, controllers, and migrations for testing environment
+
+### Writing Tests
+
+The package uses Laravel's testing framework. Test models and controllers are provided in `tests/Support/` for testing custom functionality.
+
+## Continuous Integration
+
+The package uses GitHub Actions for continuous integration. The CI workflow:
+
+- Tests against multiple PHP versions (8.2, 8.3)
+- Tests against multiple Laravel versions (10.x, 11.x)
+- Runs PHPUnit tests
+- Checks code style and static analysis
+- Generates test coverage reports
+
+See `.github/workflows/ci.yml` for the complete configuration.
 
 ## Contributing
 
@@ -575,6 +671,16 @@ TextareaField::make()
     ->rows(5)
     ->required()
     ->max(1000)
+    ->multilanguage()
+    ->toArray()
+```
+
+#### Rich Text Editor Field
+```php
+TexteditorField::make()
+    ->name('content')
+    ->label('Content')
+    ->placeholder('Enter rich content')
     ->multilanguage()
     ->toArray()
 ```
@@ -890,22 +996,97 @@ public function tables(TableBuilder $builder): TableBuilder
 The package includes pre-built React components for CRUD operations:
 
 ### CRUD Pages
-- **Index.jsx**: Data table with search, filter, and pagination
+- **Index.jsx**: Data table with search, filter, pagination, and dynamic row/table actions
 - **Create.jsx**: Form for creating new records
 - **Edit.jsx**: Form for editing existing records
-- **ActionBuilders.jsx**: Action buttons and dropdowns
+- **ActionBuilders.jsx**: Configurable action buttons and dropdowns
 
 ### Form Components
 - **CreateEditFormWithBuilder.jsx**: Advanced form component with multilingual support, tabs, and integrated field builder
+- **FieldBuilderComponent.jsx**: Interactive field builder for creating custom forms
+- **Builder.jsx**: Core builder component for dynamic content creation
+
+### Table Components
+- **DynamicRowActions.jsx**: Dynamic row-level actions (edit, delete, custom actions)
+- **DynamicTableActions.jsx**: Dynamic table-level bulk actions
 
 These components are automatically used when you use the `UseCrudController` trait and provide a complete CRUD interface with:
 
-- Multilingual content management
-- Dynamic form building
+- Multilingual content management with language tabs
+- Dynamic form building with real-time validation
 - SEO settings integration
 - Status and slug management
 - Category and author assignment
 - Responsive design with sticky headers
+- Advanced table features with sorting, filtering, and pagination
+- Custom field management with template support
+
+## Custom Fields System
+
+The package includes a powerful custom fields system that allows you to create template-based custom fields with hierarchical structure.
+
+### Implementing Custom Fields
+
+To enable custom fields on your model, implement the `HasCustomField` contract:
+
+```php
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Model;
+use AntiCmsBuilder\Contracts\HasCustomField;
+use AntiCmsBuilder\Traits\CustomFields;
+
+class Product extends Model implements HasCustomField
+{
+    use CustomFields;
+    
+    // Your model implementation
+}
+```
+
+### Custom Field Contract
+
+The `HasCustomField` contract requires two methods:
+
+```php
+interface HasCustomField
+{
+    public function customFields(): \Illuminate\Database\Eloquent\Relations\MorphMany;
+    public function getRootCustomFields(): Collection;
+}
+```
+
+The `CustomFields` trait provides default implementations:
+
+- `customFields()`: Morphs to many custom field records
+- `getRootCustomFields()`: Returns root-level custom fields with their children, ordered by sort
+
+### Using Custom Fields in Forms
+
+```php
+// In your FormBuilder
+RepeaterField::make()
+    ->name('custom_template')
+    ->label('Custom Fields')
+    ->template('product_specifications') // References a template
+    ->toArray()
+```
+
+### Custom Field Configuration
+
+The custom field model can be configured in `config/anti-cms-builder.php`:
+
+```php
+'models' => [
+    'custom_field' => 'App\\Models\\CustomField\\CustomField',
+],
+
+'services' => [
+    'custom_field' => 'App\\Services\\CustomFieldService',
+],
+```
 
 ## Console Commands
 
@@ -1037,23 +1218,13 @@ RepeaterField::make()
     ->toArray()
 ```
 
-### Custom Fields
+### Custom Fields Integration
 
-Models implementing `HasCustomField` contract can use template-based custom fields:
+When using models that implement `HasCustomField`, the system automatically handles custom field data:
 
 ```php
-// In your model
-class Product extends Model implements HasCustomField
-{
-    use HasCustomFieldTrait;
-}
-
-// In FormBuilder
-RepeaterField::make()
-    ->name('custom_template')
-    ->label('Custom Fields')
-    ->template('product_specifications') // References a template
-    ->toArray()
+// Data is automatically processed and stored in custom_fields relationship
+// with proper hierarchical structure and template association
 ```
 
 ## Custom Field Types
@@ -1119,42 +1290,102 @@ class ProductController extends Controller
 ## Package Structure
 
 ```
-packages/AntiCmsBuilder/
-├── src/
-│   ├── AntiCmsBuilderServiceProvider.php
-│   ├── FieldService.php
-│   ├── ComponentManager.php
-│   ├── Console/
-│   │   └── Commands/
-│   │       └── PageBuilderCommand.php
-│   ├── FieldTypes/
-│   │   ├── FieldType.php
-│   │   ├── InputField.php
-│   │   ├── SelectField.php
-│   │   └── ...
-│   ├── Forms/
-│   │   └── FormBuilder.php
-│   ├── Tables/
-│   │   ├── TableBuilder.php
-│   │   └── Columns/
-│   │       └── TextColumn.php
-│   ├── Filters/
-│   │   └── SelectField.php
-│   └── Traits/
-│       └── UseCrudController.php
+anticms-builder/
+├── .github/
+│   └── workflows/
+│       └── ci.yml                     # GitHub Actions CI workflow
+├── config/
+│   └── anti-cms-builder.php           # Package configuration file
 ├── resources/
 │   └── js/
 │       ├── Components/
-│       │   └── form/
-│       │       └── CreateEditFormWithBuilder.jsx
-│       └── Pages/
-│           └── CRUD/
-│               ├── Index.jsx
-│               ├── Create.jsx
-│               ├── Edit.jsx
-│               └── Actions/
-│                   └── ActionBuilders.jsx
+│       │   ├── fields/
+│       │   │   ├── Builder.jsx        # Core builder component
+│       │   │   └── FieldBuilderComponent.jsx
+│       │   ├── form/
+│       │   │   └── CreateEditFormWithBuilder.jsx
+│       │   └── Table/
+│       │       ├── DynamicRowActions.jsx
+│       │       └── DynamicTableActions.jsx
+│       ├── Pages/
+│       │   └── CRUD/
+│       │       ├── Actions/
+│       │       │   └── ActionBuilders.jsx
+│       │       ├── Create.jsx
+│       │       ├── Edit.jsx
+│       │       ├── Index.jsx
+│       │       └── TestPackagePage.jsx
+│       └── utils/
+│           └── resolverPage.js
+├── src/
+│   ├── Console/
+│   │   └── Commands/
+│   │       └── PageBuilderCommand.php
+│   ├── Contracts/
+│   │   ├── HasCustomField.php
+│   │   ├── HasForm.php
+│   │   └── HasMeta.php
+│   ├── FieldTypes/
+│   │   ├── Traits/
+│   │   │   └── SelectOptionTrait.php
+│   │   ├── CustomField.php
+│   │   ├── FieldType.php
+│   │   ├── FileField.php
+│   │   ├── ImageField.php
+│   │   ├── InputField.php
+│   │   ├── MultiSelectField.php
+│   │   ├── RepeaterField.php
+│   │   ├── Section.php
+│   │   ├── SelectField.php
+│   │   ├── TextareaField.php
+│   │   ├── TexteditorField.php
+│   │   └── ToggleField.php
+│   ├── Filters/
+│   │   └── SelectField.php
+│   ├── Forms/
+│   │   └── FormBuilder.php
+│   ├── Support/
+│   │   └── Color.php
+│   ├── Tables/
+│   │   ├── Actions/
+│   │   │   ├── BulkAction.php
+│   │   │   ├── RowAction.php
+│   │   │   └── TableAction.php
+│   │   ├── Columns/
+│   │   │   └── TextColumn.php
+│   │   └── TableBuilder.php
+│   ├── Traits/
+│   │   ├── CustomFields.php
+│   │   └── UseCrudController.php
+│   ├── AntiCmsBuilderServiceProvider.php
+│   ├── ComponentManager.php
+│   ├── FieldManager.php
+│   ├── FieldService.php
+│   ├── Resolver.php
+│   └── SortHelper.php
+├── tests/
+│   ├── Feature/
+│   │   └── UseCrudControllerTest.php
+│   ├── Support/
+│   │   ├── migrations/
+│   │   │   └── 2024_01_01_000000_create_test_models_table.php
+│   │   ├── TestController.php
+│   │   └── TestModel.php
+│   ├── Unit/
+│   │   ├── FieldTypes/
+│   │   │   ├── FieldTypeTest.php
+│   │   │   ├── InputFieldTest.php
+│   │   │   └── SelectFieldTest.php
+│   │   ├── Tables/
+│   │   │   └── DynamicParameterTest.php
+│   │   ├── FieldServiceTest.php
+│   │   ├── FormBuilderTest.php
+│   │   ├── ServiceProviderTest.php
+│   │   └── TableBuilderTest.php
+│   ├── README.md
+│   └── TestCase.php
 ├── composer.json
+├── phpunit.xml
 └── README.md
 ```
 
@@ -1177,7 +1408,9 @@ packages/AntiCmsBuilder/
 2. **Validation errors**: Check field attributes and custom rules
 3. **Translation issues**: Verify the model has translation support
 4. **Media upload problems**: Check file permissions and storage configuration
-5. **Custom field errors**: Ensure the model implements `HasCustomField`
+5. **Custom field errors**: Ensure the model implements `HasCustomField` and uses the `CustomFields` trait
+6. **Configuration not found**: Run `php artisan vendor:publish --tag=anti-cms-builder-config`
+7. **React components not found**: Run `php artisan vendor:publish --tag=anti-cms-builder-resources`
 
 ### Debugging Tips
 
@@ -1190,8 +1423,9 @@ packages/AntiCmsBuilder/
 ## Requirements
 
 - PHP 8.2+
-- Laravel 11+
+- Laravel 10.0+ or 11.0+
 - React + Inertia.js (for frontend components)
+- Composer 2.0+
 
 ## License
 
@@ -1205,8 +1439,21 @@ MIT License
 4. Push to the branch
 5. Create a Pull Request
 
+## Changelog
+
+See [CHANGELOG.md](CHANGELOG.md) for recent changes and version history.
+
 ## Support
 
-For issues and questions, please create an issue in the repository or contact the development team.
+For issues and questions:
+- Create an issue in the [GitHub repository](https://github.com/antikode/anti-cms-builder/issues)
+- Check the [CI status](https://github.com/antikode/anti-cms-builder/actions) for known issues
+- Review the test files in `tests/` for usage examples
 
-This documentation covers the complete functionality of the AntiCmsBuilder package. For more specific use cases or advanced customizations, refer to the source code and related services in the package directory.
+## Documentation
+
+This documentation covers the complete functionality of the AntiCmsBuilder package. For more specific use cases or advanced customizations:
+- Refer to the source code in the `src/` directory
+- Check the React components in `resources/js/`
+- Review the test files for working examples
+- Examine the configuration file at `config/anti-cms-builder.php`
