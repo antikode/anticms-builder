@@ -13,7 +13,7 @@ import DynamicTableActions from "../../Components/Table/DynamicTableActions.jsx"
 import DynamicRowActions from "../../Components/Table/DynamicRowActions.jsx";
 import { Button } from "@/Components/ui/button";
 
-export default function Index({ title, tables, resource, actions, permissions, HasEditPermission, HasDeletePermission }) {
+export default function Index({ title, tables, resource, permissions }) {
   const { filtered } = tables;
   const [params, setParams] = useState(filtered);
   const { languages, defaultLanguage } = usePage().props.app.languages;
@@ -71,25 +71,41 @@ export default function Index({ title, tables, resource, actions, permissions, H
             return <DynamicRowActions actions={rowData._actions} row={rowData} />;
           }
 
-          const actions = [
-            {
+          const actions = [];
+
+          if (permissions.hasEditPermission) {
+            actions.push({
               type: 'action',
               text: 'Edit',
               routeKey: `${resource}.edit`,
               data: { id }
-            },
-            {
-              type: 'separator'
-            },
-            {
+            });
+          }
+
+          if (permissions.hasViewPermission) {
+            if (actions.length > 0) {
+              actions.push({ type: 'separator' });
+            }
+            actions.push({
+              type: 'action',
+              text: 'Preview',
+              routeKey: `${resource}.show`,
+              data: { id }
+            });
+          }
+
+          if (permissions.hasDeletePermission) {
+            if (actions.length > 0) {
+              actions.push({ type: 'separator' });
+            }
+            actions.push({
               type: 'delete',
               text: 'Delete',
               routeKey: `${resource}.delete`,
               data: { id }
-            }
-          ];
+            });
+          }
 
-          // Add restore and permanent delete for soft deleted items
           if (rowData?.deleted_at != null) {
             return <ActionDropdown
               data={rowData}
@@ -109,6 +125,10 @@ export default function Index({ title, tables, resource, actions, permissions, H
                 }
               ]}
             />;
+          }
+
+          if (actions.length === 0) {
+            return null;
           }
 
           return <ActionDropdown data={rowData} actions={actions} />;

@@ -3,6 +3,7 @@
 namespace AntiCmsBuilder\Traits;
 
 use AntiCmsBuilder\Forms\FormBuilder;
+use AntiCmsBuilder\InfoLists\InfoListBuilder;
 use AntiCmsBuilder\Tables\TableBuilder;
 use Exception;
 use Illuminate\Http\Request;
@@ -48,7 +49,7 @@ trait UseCrudController
     }
 
     /**
-    * @deprecated Use tables() method in the controller instead
+     * @deprecated Use tables() method in the controller instead
      */
     protected function addAction(): array
     {
@@ -91,6 +92,15 @@ trait UseCrudController
         return true;
     }
 
+    protected function canView($data = null): bool
+    {
+        if (Gate::getPolicyFor($this->model) && method_exists(Gate::getPolicyFor($this->model), 'view')) {
+            return Gate::allows('view', $data ?? $this->model);
+        }
+
+        return true;
+    }
+
     protected function canDelete($data = null): bool
     {
         if (Gate::getPolicyFor($this->model) && method_exists(Gate::getPolicyFor($this->model), 'delete')) {
@@ -105,6 +115,7 @@ trait UseCrudController
         return [
             'hasCreatePermission' => $this->canCreate(),
             'hasEditPermission' => $this->canUpdate(),
+            'hasViewPermission' => $this->canView(),
             'hasDeletePermission' => $this->canDelete(),
         ];
     }
@@ -289,7 +300,26 @@ trait UseCrudController
      */
     public function show($id)
     {
+        $data = $this->model::find($id);
+
+        if (! $data) {
+            abort(404);
+        }
+
+        if (! $this->canView($data)) {
+            abort(403);
+        }
+
         $this->bootsrapp();
+
+        $infoList = $this->infoList(InfoListBuilder::make($this->model)->record($data))
+            ->build();
+
+        return Inertia::render('CRUD/Show', [
+            'resources' => $data,
+            'infoList' => $infoList,
+            'statusOptions' => $this->statusOptions(),
+        ]);
     }
 
     /**
@@ -430,7 +460,18 @@ trait UseCrudController
         return back();
     }
 
-    // abstract public function forms(FormBuilder $builder): FormBuilder;
+    public function forms(FormBuilder $builder): FormBuilder
+    {
+        return $builder;
+    }
 
-    abstract public function tables(TableBuilder $builder): TableBuilder;
+    public function tables(TableBuilder $builder): TableBuilder
+    {
+        return $builder;
+    }
+
+    public function infoList(InfoListBuilder $builder): InfoListBuilder
+    {
+        return $builder;
+    }
 }
