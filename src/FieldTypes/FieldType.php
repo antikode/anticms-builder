@@ -244,7 +244,7 @@ abstract class FieldType
         return $this;
     }
 
-    public function rule(string $rule, string $messages): self
+    public function rule(string $rule, string $messages = ""): self
     {
         if (isset($this->attributes['rules']) === false) {
             $this->attributes['rules'] = [];
