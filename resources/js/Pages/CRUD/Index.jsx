@@ -193,7 +193,7 @@ export default function Index({ title, tables, resource, permissions }) {
             </div>
           )}
           {permissions.hasCreatePermission && (
-            <Link href={route(`${resource}.create`)} className={`btn_primary text-sm`}>
+            <Link href={route(`${resource}.create`)}>
               <Button>Create {title}</Button>
             </Link>
           )}
