@@ -11,6 +11,8 @@ import PostObjectField from "@/Components/fields/types/PostObjectField";
 import MultiSelectField from "@/Components/fields/types/MultiSelectField";
 import PostRelatedField from "@/Components/fields/types/PostRelatedField";
 import BaseField from "@/Components/fields/BaseField";
+import MediaField from "@/Components/fields/types/MediaField";
+import TableField from "@/Components/fields/types/TableField";
 import { useCallback } from "react";
 
 export default function Builder({ item, data, setData, errors, languages, defaultLanguage, selectedIndex, setSelectedIndex, hideLabel = false }) {
@@ -80,7 +82,7 @@ export default function Builder({ item, data, setData, errors, languages, defaul
         );
       case "select":
         return (
-          <SelectField {...commonProps} options={field?.attribute?.options} searchable={field?.attribute?.searchable}/>
+          <SelectField {...commonProps} options={field?.attribute?.options} searchable={field?.attribute?.searchable} />
         );
       case "image":
         return (
@@ -99,6 +101,14 @@ export default function Builder({ item, data, setData, errors, languages, defaul
             type={field?.attribute?.type}
             acceptedFile={field?.attribute?.accept}
             fileSize={field?.attribute?.fileSize}
+          />
+        );
+      case "media":
+        return (
+          <MediaField
+            {...commonProps}
+            acceptedFile={field?.attribute?.accept}
+            resolution={field?.attribute?.resolution}
           />
         );
       case "toggle":
@@ -144,6 +154,26 @@ export default function Builder({ item, data, setData, errors, languages, defaul
         );
       case "post_related":
         return <PostRelatedField {...commonProps} />;
+      case "table":
+        return (
+          <TableField
+            {...commonProps}
+            filter={field?.attribute?.filter}
+            min={field?.attribute?.min}
+            max={field?.attribute?.max}
+            columns={field?.attribute?.columns}
+          />
+        );
+      case "group":
+        return (
+          <RepeaterField
+            {...commonProps}
+            languages={languages}
+            fields={field?.attribute?.fields}
+            min={1}
+            max={1}
+          />
+        );
       default:
         return null;
     }

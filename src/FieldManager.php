@@ -5,6 +5,7 @@ namespace AntiCmsBuilder;
 use AntiCmsBuilder\FieldTypes\FileField;
 use AntiCmsBuilder\FieldTypes\ImageField;
 use AntiCmsBuilder\FieldTypes\InputField;
+use AntiCmsBuilder\FieldTypes\MediaField;
 use AntiCmsBuilder\FieldTypes\RepeaterField;
 use AntiCmsBuilder\FieldTypes\TextareaField;
 use AntiCmsBuilder\FieldTypes\ToggleField;
@@ -18,7 +19,7 @@ class FieldManager
 {
     public static function getAvailableFields()
     {
-        return ['input', 'image', 'textarea', 'repeater', 'toggle', 'file', 'relationship', 'post_related'];
+        return ['input', 'image', 'textarea', 'repeater', 'toggle', 'file', 'media', 'relationship', 'post_related'];
     }
 
     public function addField(): array
@@ -32,6 +33,7 @@ class FieldManager
             'repeater' => RepeaterField::class,
             'toggle' => ToggleField::class,
             'file' => FileField::class,
+            'media' => MediaField::class,
             default => InputField::class
         };
 
@@ -67,6 +69,7 @@ class FieldManager
             'repeater' => RepeaterField::class,
             'toggle' => ToggleField::class,
             'file' => FileField::class,
+            'media' => MediaField::class,
             default => InputField::class
         };
         $fieldClass = new $fieldClass(
