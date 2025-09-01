@@ -2,9 +2,9 @@
 
 namespace AntiCmsBuilder\Forms;
 
+use AntiCmsBuilder\Contracts\HasCustomField;
 use AntiCmsBuilder\FieldService;
 use AntiCmsBuilder\Resolver;
-use App\Contracts\HasCustomField;
 use App\Models\File;
 use App\Models\Media;
 use App\Models\Translations\Translation;
