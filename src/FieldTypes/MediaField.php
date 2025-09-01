@@ -13,18 +13,18 @@ class MediaField extends FieldType
     {
         $this->attributes = [
             'accept' => [
-                'image/png', 
-                'image/jpeg', 
-                'image/jpg', 
-                'image/gif', 
-                'image/svg+xml', 
+                'image/png',
+                'image/jpeg',
+                'image/jpg',
+                'image/gif',
+                'image/svg+xml',
                 'image/webp',
                 'video/mp4',
                 'video/avi',
                 'video/mov',
                 'audio/mp3',
                 'audio/wav',
-                'audio/ogg'
+                'audio/ogg',
             ],
             'fileSize' => 5120, // 5MB default
             'is_required' => false,
@@ -60,6 +60,34 @@ class MediaField extends FieldType
     {
         $this->attributes['accept'] = $types;
 
+        return $this;
+    }
+
+    /**
+     * @return MediaField
+     */
+    public function height(int $min = 1, int $max = 100): static
+    {
+        $this->attributes['resolution']['minHeight'] = $min;
+        $this->attributes['resolution']['maxHeight'] = $max;
+
+        return $this;
+    }
+
+    /**
+     * @return MediaField
+     */
+    public function width(int $min = 1, int $max = 100): static
+    {
+        $this->attributes['resolution']['minWidth'] = $min;
+        $this->attributes['resolution']['maxWidth'] = $max;
+
+        return $this;
+    }
+
+    public function convertToWebp(bool $convert = true): self
+    {
+        $this->attributes['convertToWebp'] = $convert;
         return $this;
     }
 }
