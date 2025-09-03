@@ -121,26 +121,6 @@ Schema::create('translations', function (Blueprint $table) {
 });
 ```
 
-### Publish Resources
-
-#### React Components (Optional)
-If you want to customize the React components, publish them to your resources directory:
-
-```bash
-php artisan vendor:publish --tag=anti-cms-builder-resources
-```
-
-This will publish the CRUD React components to `resources/js/vendor/anti-cms-builder/`.
-
-#### Configuration (Optional)
-Publish the configuration file to customize default settings:
-
-```bash
-php artisan vendor:publish --tag=anti-cms-builder-config
-```
-
-This creates `config/anti-cms-builder.php` for customization.
-
 ## Requirements
 
 - PHP 8.2+
