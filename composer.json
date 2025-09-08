@@ -1,5 +1,5 @@
 {
-    "name": "antikode/anti-cms-builder",
+    "name": "antikode/anticms-builder",
     "description": "A powerful Laravel package for building dynamic CRUD interfaces with minimal boilerplate code. Provides form builders, table builders, and React components to accelerate development.",
     "keywords": ["laravel", "crud", "form-builder", "table-builder", "cms", "admin-panel", "react", "inertia"],
     "type": "library",
