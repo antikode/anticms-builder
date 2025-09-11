@@ -5,13 +5,16 @@
 [![Total Downloads](https://img.shields.io/packagist/dt/antikode/anti-cms-builder.svg?style=flat-square)](https://packagist.org/packages/antikode/anti-cms-builder)
 [![License](https://img.shields.io/packagist/l/antikode/anti-cms-builder.svg?style=flat-square)](https://packagist.org/packages/antikode/anti-cms-builder)
 
-A powerful Laravel package for building dynamic CRUD interfaces with minimal boilerplate code. This package provides form builders, table builders, React components, and advanced custom field management to accelerate development while ensuring consistency across your application.
+A powerful Laravel package for building dynamic CRUD interfaces with minimal boilerplate code. This package provides form builders, info lists, table builders, React components, and advanced custom field management to accelerate development while ensuring consistency across your application.
+
+> **🚧 Development Status**: This package is actively maintained and published to Packagist. While stable for production use, new features and improvements are added regularly. Please review the changelog when updating versions.
 
 ## Features
 
 - 🚀 **Rapid CRUD Development** - Build complete CRUD interfaces in minutes
 - 📝 **Dynamic Form Builder** - Create complex forms with JSON configuration
-- 📊 **Advanced Table Builder** - Sortable, searchable, filterable data tables with dynamic actions
+- 📊 **Advanced Table Builder** - Sortable, searchable, filterable data tables with dynamic actions  
+- 📋 **InfoList System** - Structured data display with sections, entry types, and automatic formatting
 - 🌍 **Multilingual Support** - Built-in translation management with language tabs
 - ⚛️ **React Components** - Pre-built UI components for Inertia.js
 - 🔧 **Extensible** - Easy to customize and extend with custom field types
@@ -27,29 +30,30 @@ A powerful Laravel package for building dynamic CRUD interfaces with minimal boi
 2. [Quick Start](#quick-start)
 3. [Configuration](#configuration)
 4. [FormBuilder Documentation](#formbuilder-documentation)
-5. [TableBuilder Usage](#tablebuilder-usage)
-6. [React Components](#react-components)
-7. [Custom Fields System](#custom-fields-system)
-8. [Console Commands](#console-commands)
-9. [Advanced Features](#advanced-features)
+5. [InfoList Documentation](#infolist-documentation)
+6. [TableBuilder Usage](#tablebuilder-usage)
+7. [React Components](#react-components)
+8. [Custom Fields System](#custom-fields-system)
+9. [Console Commands](#console-commands)
+10. [Advanced Features](#advanced-features)
 
 ## Installation
 
-> **Note**: This package is currently in development and not yet published to Packagist. The installation method below is not effective yet.
+> **Note**: This package is currently in active development. While published to Packagist, new features and breaking changes may be introduced frequently. Please check the changelog before updating.
 
-### From Packagist (Not Available Yet)
+### From Packagist (Recommended)
 
 ```bash
 composer require antikode/anticms-builder
 ```
 
-### From Private Repository
+### For Development/Latest Features
 
-Since this package is in a private repository, you need to add it to your `composer.json` manually:
+If you want to use the latest development version with cutting-edge features:
 
 1. Add the repository to your `composer.json`:
 
-**For HTTPS (requires authentication token):**
+**For HTTPS:**
 ```json
 {
     "repositories": [
@@ -61,7 +65,7 @@ Since this package is in a private repository, you need to add it to your `compo
 }
 ```
 
-**For SSH (recommended):**
+**For SSH:**
 ```json
 {
     "repositories": [
@@ -73,46 +77,49 @@ Since this package is in a private repository, you need to add it to your `compo
 }
 ```
 
-2. **Authentication Setup:**
-
-**For HTTPS method:**
-- Create a GitHub Personal Access Token with repository access
-- Configure Composer authentication:
-```bash
-composer config github-oauth.github.com YOUR_GITHUB_TOKEN
-```
-
-**For SSH method (recommended):**
-- Ensure your SSH key is added to your GitHub account
-- Test SSH connection: `ssh -T git@github.com`
-
-3. Require the package:
+2. Require the development version:
 
 ```bash
-composer require antikode/anti-cms-builder:dev-main
+composer require antikode/anticms-builder:dev-main
 ```
 
 The package will automatically register its service provider through Laravel's package discovery.
 
-### Database Migration
+### Database Requirements
 
-If your models use custom fields, ensure you have the necessary database tables. The package expects:
+For full functionality, ensure you have these database structures:
 
-- A `custom_fields` table for storing custom field data
-- A `translations` table for multilingual content
-- Media/file tables if using file uploads
+**Required for Custom Fields:**
+- `custom_fields` table for storing custom field data
 
-Refer to your application's migration files or create them based on your model requirements.
+**Required for Multilingual Support:**
+- `translations` table for multilingual content
 
-### Publish Resources (Mandatory)
+**Required for Media Features:**
+- Media/file storage tables (implementation-dependent)
 
-If you want to customize the React components, publish them to your resources directory:
+**Example Migration Structure:**
+```php
+// Custom fields table
+Schema::create('custom_fields', function (Blueprint $table) {
+    $table->id();
+    $table->morphs('customfieldable');
+    $table->string('template')->nullable();
+    $table->json('data');
+    $table->unsignedBigInteger('parent_id')->nullable();
+    $table->integer('sort')->default(0);
+    $table->timestamps();
+});
 
-```bash
-php artisan vendor:publish --tag=anti-cms-builder-resources
+// Translations table (example)
+Schema::create('translations', function (Blueprint $table) {
+    $table->id();
+    $table->morphs('translatable');
+    $table->string('locale');
+    $table->json('data');
+    $table->timestamps();
+});
 ```
-
-This will publish the CRUD React components to `resources/js/vendor/anti-cms-builder/`.
 
 ## Requirements
 
@@ -940,6 +947,390 @@ public function forms(FormBuilder $builder): FormBuilder
 ```
 
 
+
+## InfoList Documentation
+
+The InfoList system provides a powerful way to display structured information about your models in a clean, organized format. It supports various entry types, sections, custom formatting, and automatic data processing.
+
+### Overview
+
+InfoLists are used to display model data in detail views, providing a structured way to present information with different entry types and sections. The system automatically handles data formatting, relationships, multilingual content, and conditional visibility.
+
+### Basic Usage
+
+Create an InfoList in your controller:
+
+```php
+<?php
+
+namespace App\Http\Controllers;
+
+use AntiCmsBuilder\InfoLists\InfoListBuilder;
+use AntiCmsBuilder\InfoLists\Section;
+use AntiCmsBuilder\InfoLists\Entries\TextEntry;
+use AntiCmsBuilder\InfoLists\Entries\BooleanEntry;
+use AntiCmsBuilder\InfoLists\Entries\ImageEntry;
+use AntiCmsBuilder\InfoLists\Entries\RelationshipEntry;
+use AntiCmsBuilder\InfoLists\Entries\DateEntry;
+use AntiCmsBuilder\Traits\UseCrudController;
+use App\Models\Product;
+
+class ProductController extends Controller
+{
+    use UseCrudController;
+
+    protected string $model = Product::class;
+
+    public function infoList(InfoListBuilder $builder): InfoListBuilder
+    {
+        return $builder
+            ->record($builder->record)
+            ->sections([
+                Section::make('Product Information')
+                    ->entries([
+                        TextEntry::make()
+                            ->name('name')
+                            ->label('Product Name')
+                            ->toArray(),
+
+                        TextEntry::make()
+                            ->name('description')
+                            ->label('Description')
+                            ->limit(200)
+                            ->toArray(),
+
+                        TextEntry::make()
+                            ->name('price')
+                            ->label('Price')
+                            ->format(fn ($value) => '$' . number_format($value, 2))
+                            ->toArray(),
+                    ])
+                    ->toArray(),
+
+                Section::make('Status & Availability')
+                    ->entries([
+                        BooleanEntry::make()
+                            ->name('is_active')
+                            ->label('Active Status')
+                            ->trueLabel('Active')
+                            ->falseLabel('Inactive')
+                            ->toArray(),
+                    ])
+                    ->toArray(),
+            ]);
+    }
+}
+```
+
+### Entry Types
+
+#### TextEntry
+
+Displays text content with optional formatting and character limits:
+
+```php
+TextEntry::make()
+    ->name('title')
+    ->label('Title')
+    ->limit(100)           // Character limit
+    ->copyable()           // Add copy to clipboard functionality
+    ->markdown()           // Render as markdown
+    ->html()               // Render as HTML
+    ->format(fn ($value) => strtoupper($value))  // Custom formatting
+    ->toArray()
+```
+
+#### BooleanEntry
+
+Displays boolean values with customizable labels and colors:
+
+```php
+BooleanEntry::make()
+    ->name('is_active')
+    ->label('Status')
+    ->trueLabel('Active')
+    ->falseLabel('Inactive')
+    ->trueColor('success')
+    ->falseColor('danger')
+    ->toArray()
+```
+
+#### DateEntry
+
+Displays dates with customizable formatting:
+
+```php
+DateEntry::make()
+    ->name('created_at')
+    ->label('Created Date')
+    ->dateFormat('F j, Y g:i A')  // Custom date format
+    ->toArray()
+```
+
+#### ImageEntry
+
+Displays images with customizable dimensions and styling:
+
+```php
+ImageEntry::make()
+    ->name('featured_image')
+    ->label('Featured Image')
+    ->height(200)
+    ->width(300)
+    ->circular()    // Display as circular image
+    ->square()      // Display with square aspect ratio
+    ->toArray()
+```
+
+#### RelationshipEntry
+
+Displays related model data:
+
+```php
+RelationshipEntry::make()
+    ->name('category')
+    ->label('Category')
+    ->displayUsing('name')  // Specify which column to display
+    ->badge()               // Display as a badge/tag
+    ->toArray()
+```
+
+### Sections
+
+Group related entries into sections with titles, descriptions, and icons:
+
+```php
+Section::make('Product Details')
+    ->description('Basic product information')
+    ->icon('heroicon-o-information-circle')
+    ->collapsed(false)      // Whether section is collapsed by default
+    ->entries([
+        // Entry definitions...
+    ])
+    ->visible(fn ($record) => $record->is_published)  // Conditional visibility
+    ->toArray()
+```
+
+### Advanced Entry Configuration
+
+#### Custom State and Formatting
+
+```php
+TextEntry::make()
+    ->name('status')
+    ->label('Status')
+    ->state(fn ($record) => $record->getStatusLabel())  // Custom value retrieval
+    ->format(fn ($value, $record) => 
+        "<span class='badge badge-{$record->status_color}'>{$value}</span>"
+    )
+    ->html()  // Render as HTML
+    ->toArray()
+```
+
+#### Nested Relationships
+
+```php
+TextEntry::make()
+    ->name('category.parent.name')  // Access nested relationships
+    ->label('Parent Category')
+    ->toArray()
+
+RelationshipEntry::make()
+    ->name('user.profile')
+    ->label('Author Profile')
+    ->displayUsing('display_name')
+    ->toArray()
+```
+
+#### Conditional Visibility
+
+```php
+TextEntry::make()
+    ->name('internal_notes')
+    ->label('Internal Notes')
+    ->visible(fn ($record) => auth()->user()->can('view-internal-notes'))
+    ->hidden(fn ($record) => !$record->has_internal_notes)
+    ->toArray()
+```
+
+### Complete Example
+
+```php
+public function infoList(InfoListBuilder $builder): InfoListBuilder
+{
+    return $builder
+        ->record($builder->record)
+        ->sections([
+            // Basic Information Section
+            Section::make('Product Information')
+                ->description('Basic product details and specifications')
+                ->icon('heroicon-o-cube')
+                ->entries([
+                    TextEntry::make()
+                        ->name('name')
+                        ->label('Product Name')
+                        ->copyable()
+                        ->toArray(),
+
+                    TextEntry::make()
+                        ->name('description')
+                        ->label('Description')
+                        ->limit(300)
+                        ->markdown()
+                        ->toArray(),
+
+                    TextEntry::make()
+                        ->name('sku')
+                        ->label('SKU')
+                        ->copyable()
+                        ->toArray(),
+
+                    TextEntry::make()
+                        ->name('price')
+                        ->label('Price')
+                        ->format(fn ($value) => $value ? '$' . number_format($value, 2) : '—')
+                        ->toArray(),
+                ])
+                ->toArray(),
+
+            // Status Section
+            Section::make('Status & Availability')
+                ->entries([
+                    BooleanEntry::make()
+                        ->name('is_active')
+                        ->label('Active Status')
+                        ->trueLabel('Active')
+                        ->falseLabel('Inactive')
+                        ->trueColor('success')
+                        ->falseColor('danger')
+                        ->toArray(),
+
+                    BooleanEntry::make()
+                        ->name('in_stock')
+                        ->label('Stock Status')
+                        ->trueLabel('In Stock')
+                        ->falseLabel('Out of Stock')
+                        ->toArray(),
+                ])
+                ->toArray(),
+
+            // Relationships Section
+            Section::make('Relationships')
+                ->entries([
+                    RelationshipEntry::make()
+                        ->name('category')
+                        ->label('Category')
+                        ->displayUsing('name')
+                        ->badge()
+                        ->toArray(),
+
+                    RelationshipEntry::make()
+                        ->name('user')
+                        ->label('Created By')
+                        ->displayUsing('name')
+                        ->toArray(),
+                ])
+                ->toArray(),
+
+            // Media Section
+            Section::make('Media')
+                ->collapsed(true)
+                ->entries([
+                    ImageEntry::make()
+                        ->name('featured_image')
+                        ->label('Featured Image')
+                        ->height(200)
+                        ->square()
+                        ->toArray(),
+                ])
+                ->visible(fn ($record) => $record->featured_image)
+                ->toArray(),
+
+            // Timestamps Section
+            Section::make('System Information')
+                ->collapsed(true)
+                ->entries([
+                    DateEntry::make()
+                        ->name('created_at')
+                        ->label('Created Date')
+                        ->dateFormat('F j, Y g:i A')
+                        ->toArray(),
+
+                    DateEntry::make()
+                        ->name('updated_at')
+                        ->label('Last Updated')
+                        ->dateFormat('F j, Y g:i A')
+                        ->toArray(),
+                ])
+                ->toArray(),
+        ])
+        ->entries([
+            // Global entries (displayed outside of sections)
+            TextEntry::make()
+                ->name('slug')
+                ->label('URL Slug')
+                ->copyable()
+                ->format(fn ($value) => url($value))
+                ->toArray(),
+        ]);
+}
+```
+
+### Data Processing
+
+The InfoListBuilder automatically processes data based on entry types:
+
+#### Automatic Formatting
+
+- **Boolean values**: Converted to "Yes/No" or custom labels
+- **Dates**: Formatted using Carbon (default: "M d, Y")
+- **Arrays**: Converted to comma-separated strings
+- **Relationships**: Displays related model's name, title, or ID
+- **Null/Empty values**: Displays "—" placeholder
+
+#### Dot Notation Support
+
+Access nested relationships and properties:
+
+```php
+TextEntry::make()
+    ->name('category.parent.name')  // Nested relationship
+    ->toArray()
+
+TextEntry::make()
+    ->name('translations.en.title')  // Multilingual content
+    ->toArray()
+```
+
+### Best Practices
+
+1. **Organize with Sections**: Group related information logically
+2. **Use Appropriate Entry Types**: Choose the right entry type for each data type
+3. **Add Descriptions**: Provide context with section descriptions
+4. **Conditional Visibility**: Hide irrelevant information based on permissions or data state
+5. **Custom Formatting**: Use format callbacks for complex display logic
+6. **Performance**: Use eager loading for relationships in your table query
+7. **User Experience**: Use collapsed sections for less important information
+
+### Integration with CRUD
+
+When using the `UseCrudController` trait, InfoLists are automatically integrated into the detail view. The system will:
+
+1. Call your `infoList` method to build the structure
+2. Set the current record automatically
+3. Process all entries with the record data
+4. Render the InfoList in your detail view
+
+### Styling and Customization
+
+InfoLists work with your existing CSS framework. Entry types include semantic classes for styling:
+
+- `.info-entry-text` for text entries
+- `.info-entry-boolean` for boolean entries  
+- `.info-entry-image` for image entries
+- `.info-entry-relationship` for relationship entries
+- `.info-section` for sections
+- `.info-section-collapsed` for collapsed sections
 
 ## TableBuilder Usage
 

@@ -2,9 +2,9 @@
 
 namespace AntiCmsBuilder\Forms;
 
+use AntiCmsBuilder\Contracts\HasCustomField;
 use AntiCmsBuilder\FieldService;
 use AntiCmsBuilder\Resolver;
-use App\Contracts\HasCustomField;
 use App\Models\File;
 use App\Models\Media;
 use App\Models\Translations\Translation;
@@ -564,7 +564,7 @@ final class FormBuilder
         ];
         $forms = $this->forms;
 
-        if (method_exists($model, 'translations') && method_exists($model, 'meta')) {
+        if (method_exists($model, 'translations') || method_exists($model, 'meta')) {
             $translations = Translation::getLanguages()['languages'];
             foreach ($translations as $lang) {
                 $translation = $model->translations->firstWhere('lang', $lang['code']);
