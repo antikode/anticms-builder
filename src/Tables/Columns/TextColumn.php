@@ -78,6 +78,13 @@ class TextColumn
         return $this;
     }
 
+    public function hidden(bool $state = true): self
+    {
+        $this->column['hidden'] = $state;
+
+        return $this;
+    }
+
     public function toArray(): array
     {
         return $this->column;

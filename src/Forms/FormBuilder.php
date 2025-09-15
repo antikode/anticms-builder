@@ -217,8 +217,21 @@ final class FormBuilder
             $save = $this->saveFunction;
             $model = $save($request);
         } else {
-            $model = $this->model::create($request->only((new $this->model)->getFillable()));
+            $instance = app($this->model);
+            $dataBody = $request->only($instance->getFillable());
+            $model = new $this->model;
+            foreach ($dataBody as $key => $value) {
+                $model->{$key} = $value;
+            }
+            $model->save();
+
             $model = $this->processFormRelations($model, $request);
+
+            foreach ($instance->getAppends() as $key) {
+                if ($request->has($key)) {
+                    $model->{$key} = $request->input($key);
+                }
+            }
         }
 
         if ($this->afterSave) {
@@ -271,8 +284,20 @@ final class FormBuilder
             $update = $this->updateFunction;
             $model = $update($request, $model);
         } else {
-            $model->update($request->only((new $this->model)->getFillable()));
+            $instance = app($this->model);
+            $dataBody = $request->only($instance->getFillable());
+            foreach ($dataBody as $key => $value) {
+                $model->{$key} = $value;
+            }
+            $model->save();
+
             $model = $this->processFormRelations($model, $request);
+
+            foreach ($instance->getAppends() as $key) {
+                if ($request->has($key)) {
+                    $model->{$key} = $request->input($key);
+                }
+            }
         }
 
         if ($this->afterSave) {

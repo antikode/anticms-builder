@@ -64,8 +64,11 @@ final class TableBuilder
         $query = $this->query ?? $this->defaultQuery();
         $request = request();
         $tables = $this->tables;
+        
+        // Store original headers for processing (including hidden ones for search)
+        $originalHeaders = $tables['headers'];
 
-        $searchableColumns = Arr::pluck(Arr::where($tables['headers'], fn ($header) => isset($header['searchable']) && $header['searchable'] == true), 'column');
+        $searchableColumns = Arr::pluck(Arr::where($originalHeaders, fn ($header) => isset($header['searchable']) && $header['searchable'] == true), 'column');
         if (count($searchableColumns) > 0) {
             $query->when($request->filled('q'), function (Builder $q) use ($request, $searchableColumns) {
                 $q->where(function (Builder $query) use ($request, $searchableColumns) {
@@ -106,13 +109,18 @@ final class TableBuilder
         // Set meta data once
         $tables['meta'] = $paging->toArray();
 
+        // Filter out hidden columns from headers for frontend
+        $tables['headers'] = array_values(array_filter($tables['headers'], function ($header) {
+            return !isset($header['hidden']) || $header['hidden'] !== true;
+        }));
+
         // Process headers once
         foreach ($tables['headers'] as $key => $table) {
             $tables['headers'][$key]['accessorKey'] = $table['id'];
         }
 
         foreach ($paging->items() as $keyI => $item) {
-            foreach ($tables['headers'] as $key => $table) {
+            foreach ($originalHeaders as $key => $table) {
                 if (str($table['column'])->contains('.')) {
                     $explode = str($table['column'])->explode('.');
                     /** @var Model|Collection<int, Model> $relation */
@@ -142,14 +150,17 @@ final class TableBuilder
                         $td = $table['format']($item->{$table['column']});
                     }
                 }
-                if (isset($table['description'])) {
-                    $table['description']($item);
-                    $tables['rows'][$keyI][$table['id']] = [
-                        'value' => $td,
-                        'description' => $table['description']($item),
-                    ];
-                } else {
-                    $tables['rows'][$keyI][$table['id']] = $td;
+                // Only include non-hidden columns in the row data
+                if (!isset($table['hidden']) || $table['hidden'] !== true) {
+                    if (isset($table['description'])) {
+                        $table['description']($item);
+                        $tables['rows'][$keyI][$table['id']] = [
+                            'value' => $td,
+                            'description' => $table['description']($item),
+                        ];
+                    } else {
+                        $tables['rows'][$keyI][$table['id']] = $td;
+                    }
                 }
             }
             $tables['rows'][$keyI]['id'] = $item->getKey();
