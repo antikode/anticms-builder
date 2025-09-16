@@ -416,7 +416,18 @@ final class FormBuilder
             $postService->customFieldHandler($model, $request);
         }
 
+        // section save for repater
+        // $translationForms = $this->translationForms();
+        // section save for translation
+
         return $model;
+    }
+
+    private function translationForms(): Collection
+    {
+        return collect($this->forms)->filter(function ($form) {
+            return isset($form['multilanguage']) && $form['multilanguage'] == true;
+        })->values();
     }
 
     private function relationForms(): Collection
@@ -647,9 +658,24 @@ final class FormBuilder
             }
         }
 
+        // // get default value is defined in template
+        // foreach ($template as $tform) {
+        //     $keyName = $tform['keyName'];
+        //     $tFields = $tform['fields'];
+        //     foreach ($tFields as $tField) {
+        //         $atribute = $tField['attribute'] ?? [];
+        //         $defaultValue = $atribute['defaultValue'] ?? null;
+        //         if ($defaultValue != "") {
+        //             $key = str_replace(' ', '__', 'cf '.$keyName.' '.$tField["name"]);
+        //             // dd($tField);
+        //             // if ($tField['multilanguage']) {
+        //             // }
+        //         }
+        //     }
+        // }
         if ($model instanceof HasCustomField) {
-            $cpt = new FieldService;
             $template = array_values(array_filter($forms, fn ($f) => isset($f['fields'])));
+            $cpt = new FieldService;
             $customFields = $cpt->templateFormFields($template, $model);
             if (isset($customFields['translations'])) {
                 foreach ($fields['translations'] as $lang => $langFields) {
