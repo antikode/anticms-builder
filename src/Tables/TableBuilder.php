@@ -144,10 +144,18 @@ final class TableBuilder
                     if (isset($table['format']) && $relatedModel?->{$property}) {
                         $td = $table['format']($relatedModel->{$property});
                     }
+
+                    if (isset($table['formatUsingState'])) {
+                        $td = $table['formatUsingState']($item);
+                    }
                 } else {
                     $td = $item->{$table['column']};
                     if (isset($table['format'])) {
                         $td = $table['format']($item->{$table['column']});
+                    }
+
+                    if (isset($table['formatUsingState'])) {
+                        $td = $table['formatUsingState']($item);
                     }
                 }
                 // Only include non-hidden columns in the row data

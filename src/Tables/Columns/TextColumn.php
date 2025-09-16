@@ -78,6 +78,13 @@ class TextColumn
         return $this;
     }
 
+    public function formatUsingState(Closure $callback): self
+    {
+        $this->column['formatUsingState'] = $callback;
+
+        return $this;
+    }
+
     public function hidden(bool $state = true): self
     {
         $this->column['hidden'] = $state;
