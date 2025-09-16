@@ -524,7 +524,19 @@ final class FormBuilder
                     }
                 } elseif ($relationMethod instanceof BelongsToMany) {
                     $values = $request->{$form['name']};
-                    $ids = is_string($values) ? json_decode($values, true) : (array) $values;
+                    $ids = [];
+
+                    if (is_string($values)) {
+                        $decoded = json_decode($values, true);
+                        if (json_last_error() === JSON_ERROR_NONE) {
+                            $ids = (array) $decoded;
+                        } else {
+                            $ids = [$values];
+                        }
+                    }
+                    if (is_array($values)) {
+                        $ids = $values;
+                    }
                     $relationMethod->sync($ids);
                 } elseif ($relationMethod instanceof BelongsTo) {
                     $related = $relationMethod->getRelated()::find($request->get($form['name']));
