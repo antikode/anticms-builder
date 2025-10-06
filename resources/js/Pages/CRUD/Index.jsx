@@ -1,7 +1,7 @@
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout.jsx";
 import CardWhite from "@/Components/global/CardWhite.jsx";
 import Heading from "@/Components/global/Heading.jsx";
-import { Link, router, usePage } from "@inertiajs/react";
+import { Link, router } from "@inertiajs/react";
 import { DataTable } from "@/Components/ui/data-table";
 import { useCallback, useEffect, useState } from "react";
 import { useMemo } from "react";
@@ -13,10 +13,9 @@ import DynamicTableActions from "../../Components/Table/DynamicTableActions.jsx"
 import DynamicRowActions from "../../Components/Table/DynamicRowActions.jsx";
 import { Button } from "@/Components/ui/button";
 
-export default function Index({ title, tables, resource, permissions }) {
+export default function Index({ title, tables, resource, permissions, languages, defaultLanguage }) {
   const { filtered } = tables;
   const [params, setParams] = useState(filtered);
-  const { languages, defaultLanguage } = usePage().props.app.languages;
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [selectedRows, setSelectedRows] = useState({});
   const headers = useMemo(() => {

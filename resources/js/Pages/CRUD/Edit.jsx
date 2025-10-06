@@ -1,13 +1,14 @@
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout.jsx";
 import CardWhite from "@/Components/global/CardWhite.jsx";
-import { useForm, usePage } from "@inertiajs/react";
+import { useForm } from "@inertiajs/react";
 import { useState, useCallback, useMemo } from 'react';
 import CreateEditFormWithBuilder from "../../Components/form/CreateEditFormWithBuilder";
 
-export default function Edit({ resources, authors, fields, customFields, title, resource, slug, hasMeta, hasStatus }) {
+export default function Edit({ resources, authors, fields, customFields, title, resource, slug, hasMeta, hasStatus, languages, defaultLanguage }) {
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { languages, defaultLanguage } = usePage().props.app.languages;
+  console.log("OKS")
+  console.log("SAYAP")
 
   const initialFormState = useMemo(() => {
     // Ensure we have valid data to prevent hydration mismatches

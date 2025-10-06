@@ -55,8 +55,31 @@ export const ProgrammableFieldRegistryProvider = ({ children }) => {
 
   const createComponentImporter = (path) => {
     return async () => {
-      console.log(path)
+      // Convert absolute file path to relative Vite path
       let importPath = path;
+      
+      // If path contains absolute file system path, extract the relative part
+      if (importPath.includes('/resources/js/')) {
+        importPath = importPath.substring(importPath.indexOf('/resources/js/'));
+      }
+      
+      // Ensure path starts with /
+      if (!importPath.startsWith('/')) {
+        importPath = '/' + importPath;
+      }
+
+      const modules = import.meta.glob('/resources/js/Components/fields/types/custom/*.{jsx,js}', { eager: false });
+      
+      const matchedModule = modules[importPath];
+
+      if (matchedModule) {
+        try {
+          return await matchedModule();
+        } catch (error) {
+          console.error(`Failed to import component from ${importPath}:`, error);
+          throw new Error(`Error loading custom field: ${error.message}`);
+        }
+      }
 
       try {
         return await import(/* @vite-ignore */ importPath);

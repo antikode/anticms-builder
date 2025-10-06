@@ -1,0 +1,9 @@
+{
+  "dependencies": {
+    "@inertiajs/react": "^2.2.6",
+    "@radix-ui/react-label": "^2.1.7",
+    "@radix-ui/react-tabs": "^1.1.13",
+    "date-fns": "^4.1.0",
+    "lodash": "^4.17.21"
+  }
+}

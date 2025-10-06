@@ -16,7 +16,7 @@ class ProgrammableFieldService
     public function register(string $fieldName, ProgrammableField $field): void
     {
         $this->registeredFields[$fieldName] = $field;
-        $this->registerComponent($fieldName, base_path($field->path()));
+        $this->registerComponent($fieldName, $field->path());
         $field->registerRoutes();
     }
 

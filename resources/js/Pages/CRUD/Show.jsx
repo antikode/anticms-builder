@@ -1,13 +1,12 @@
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout.jsx";
 import CardWhite from "@/Components/global/CardWhite.jsx";
-import { usePage, Link } from "@inertiajs/react";
+import { Link } from "@inertiajs/react";
 import { useState, useMemo } from 'react';
 import { Button } from "@/Components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/Components/ui/tabs";
 
-export default function Show({ resources, infoList, statusOptions, title, resource, hasMeta, hasStatus }) {
+export default function Show({ resources, infoList, statusOptions, title, resource, hasMeta, hasStatus, languages, defaultLanguage }) {
   const [selectedIndex, setSelectedIndex] = useState(0);
-  const { languages, defaultLanguage } = usePage().props.app.languages;
 
   const detectFieldType = (value, key) => {
     if (value === null || value === undefined) return 'text';

@@ -1,7 +1,7 @@
 // resolverPage.js
 
 // package pages
-const packagePages = import.meta.glob('../Pages/**/*.jsx')
+const packagePages = import.meta.glob('../Pages/**/*.jsx', { eager: false })
 
 function resolvePackagePages(name) {
   // Try to match the requested name with our package pages

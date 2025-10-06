@@ -197,9 +197,15 @@ trait UseCrudController
             ->tables(TableBuilder::make($this->model))
             ->build();
 
+        $translationModel = config('anti-cms-builder.models.translation');
+        $languages = $translationModel::getLanguages()['languages'];
+        $defaultLanguage = $translationModel::getLanguages()['defaultLanguage'];
+
         return Inertia::render('CRUD/Index', [
             'tables' => $tables,
             'permissions' => $permissions,
+            'languages' => $languages,
+            'defaultLanguage' => $defaultLanguage,
         ]);
     }
 
@@ -217,9 +223,15 @@ trait UseCrudController
         $forms = $this->forms(FormBuilder::make($this->model)->loadValues())
             ->getForms();
 
+        $translationModel = config('anti-cms-builder.models.translation');
+        $languages = $translationModel::getLanguages()['languages'];
+        $defaultLanguage = $translationModel::getLanguages()['defaultLanguage'];
+
         return Inertia::render('CRUD/Create', [
             'customFields' => $forms,
             'statusOptions' => $this->statusOptions(),
+            'languages' => $languages,
+            'defaultLanguage' => $defaultLanguage,
         ]);
     }
 
@@ -315,10 +327,16 @@ trait UseCrudController
         $infoList = $this->infoList(InfoListBuilder::make($this->model)->record($data))
             ->build();
 
+        $translationModel = config('anti-cms-builder.models.translation');
+        $languages = $translationModel::getLanguages()['languages'];
+        $defaultLanguage = $translationModel::getLanguages()['defaultLanguage'];
+
         return Inertia::render('CRUD/Show', [
             'resources' => $data,
             'infoList' => $infoList,
             'statusOptions' => $this->statusOptions(),
+            'languages' => $languages,
+            'defaultLanguage' => $defaultLanguage,
         ]);
     }
 
@@ -347,11 +365,17 @@ trait UseCrudController
         $fields = $formBuilder->getFields($data);
         $customFields = $formBuilder->getForms();
 
+        $translationModel = config('anti-cms-builder.models.translation');
+        $languages = $translationModel::getLanguages()['languages'];
+        $defaultLanguage = $translationModel::getLanguages()['defaultLanguage'];
+
         return Inertia::render('CRUD/Edit', [
             'resources' => $data,
             'fields' => $fields,
             'customFields' => $customFields,
             'statusOptions' => $this->statusOptions(),
+            'languages' => $languages,
+            'defaultLanguage' => $defaultLanguage,
         ]);
     }
 

@@ -1,15 +1,14 @@
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout.jsx";
 import CardWhite from "@/Components/global/CardWhite.jsx";
-import { useForm, usePage } from "@inertiajs/react";
+import { useForm } from "@inertiajs/react";
 import { format } from "date-fns"
 import { useState, useCallback, useMemo, useEffect } from 'react';
 import { pluck } from "@/lib/utils";
 import CreateEditFormWithBuilder from "../../Components/form/CreateEditFormWithBuilder";
 
-export default function Create({ auth, authors, title, customFields, resource, slug, hasMeta, hasStatus }) {
+export default function Create({ auth, authors, title, customFields, resource, slug, hasMeta, hasStatus, languages, defaultLanguage }) {
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { languages, defaultLanguage } = usePage().props.app.languages;
 
   let defaultValues = {};
   pluck(customFields, 'name').forEach((c, i) => {
