@@ -176,7 +176,6 @@ export default function Builder({ item, data, setData, errors, languages, defaul
           />
         );
       case "programmable":
-        console.log(field)
         return (
           <ProgrammableField
             {...commonProps}
