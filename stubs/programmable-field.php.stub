@@ -1,0 +1,117 @@
+<?php
+
+namespace {{ namespace }};
+
+use AntiCmsBuilder\FieldTypes\ProgrammableField;
+
+class {{ className }} extends ProgrammableField
+{
+    protected string $type = 'programmable';
+
+    public function __construct(string $name = '', string $label = '')
+    {
+        parent::__construct($name, $label);
+
+        $this->component('{{ componentName }}')
+             ->bridgeEndpoint('/{{ fieldName }}/bridge')
+             ->validationEndpoint('/{{ fieldName }}/validate')
+             ->customAttributes([
+                 // Add your custom attributes here
+                 'placeholder' => 'Enter value...',
+                 'maxLength' => 255,
+             ])
+             ->method('exampleMethod', [$this, 'handleExampleMethod']);
+    }
+
+    /**
+     * Handle bridge requests from JSX
+     */
+    protected function onBridgeRequest(string $method, array $params, $request)
+    {
+        switch ($method) {
+            case 'validate':
+                return $this->validateFieldValue($params['value'] ?? '');
+
+            case 'search':
+                return $this->searchData($params['query'] ?? '');
+
+            default:
+                return parent::onBridgeRequest($method, $params, $request);
+        }
+    }
+
+    /**
+     * Custom validation for field values
+     */
+    protected function onValidationRequest($value, string $fieldName, $request)
+    {
+        $errors = [];
+
+        // Add your validation logic here
+        if (empty($value) && $this->attributes['is_required']) {
+            $errors[] = 'This field is required';
+        }
+
+        if (strlen($value) > 255) {
+            $errors[] = 'Value must not exceed 255 characters';
+        }
+
+        return response()->json([
+            'valid' => empty($errors),
+            'message' => empty($errors) ? 'Valid' : $errors[0],
+            'errors' => $errors,
+        ]);
+    }
+
+    /**
+     * Example custom method callable from frontend
+     */
+    public function handleExampleMethod(array $params, $request)
+    {
+        // Implement your custom logic here
+        return [
+            'success' => true,
+            'message' => 'Example method executed successfully',
+            'data' => $params,
+            'timestamp' => now()->toISOString(),
+        ];
+    }
+
+    /**
+     * Validate field value
+     */
+    protected function validateFieldValue(string $value)
+    {
+        $isValid = !empty($value) && strlen($value) <= 255;
+
+        return response()->json([
+            'valid' => $isValid,
+            'message' => $isValid ? 'Valid value' : 'Invalid value format',
+            'value' => $value,
+        ]);
+    }
+
+    /**
+     * Search data based on query
+     */
+    protected function searchData(string $query)
+    {
+        // Implement your search logic here
+        $results = [
+            ['id' => 1, 'label' => 'Sample Result 1'],
+            ['id' => 2, 'label' => 'Sample Result 2'],
+        ];
+
+        return response()->json([
+            'success' => true,
+            'results' => collect($results)
+                ->filter(fn($item) => str_contains(strtolower($item['label']), strtolower($query)))
+                ->values(),
+        ]);
+    }
+
+    public function path(): string
+    {
+        return '{{ jsxPath }}';
+    }
+}

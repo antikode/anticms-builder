@@ -1,0 +1,70 @@
+import React, { useState, useEffect } from "react";
+import { Input } from "@/Components/ui/input";
+import { Button } from "@/Components/ui/button";
+
+export default function {{ componentName }}({
+    name, id, label, disabled, required, placeholder,
+    setValue, getValue, langCode, errors,
+    customAttributes = {},
+    callBridgeMethod, callCustomMethod,
+}) {
+    const { colorFormat = 'hex', presetColors = [] } = customAttributes;
+    const [currentValue, setCurrentValue] = useState(getValue(langCode) || '');
+
+    useEffect(() => {
+        setCurrentValue(getValue(langCode) || '');
+    }, [getValue, langCode]);
+
+    const handleColorChange = async (color) => {
+        const response = await callBridgeMethod('validateColor', { color });
+        if (response?.valid) {
+            setCurrentValue(color);
+            setValue(name, color, langCode);
+        }
+    };
+
+    const generateRandom = async () => {
+        const response = await callCustomMethod('generateRandomColor');
+        if (response?.success) {
+            handleColorChange(response.data.color);
+        }
+    };
+
+    return (
+        <div className="space-y-2">
+            <div className="flex items-center gap-2">
+                <Input
+                    type="text"
+                    id={id}
+                    value={currentValue}
+                    onChange={(e) => handleColorChange(e.target.value)}
+                    placeholder={placeholder}
+                    disabled={disabled}
+                    required={required}
+                />
+                <input
+                    type="color"
+                    value={currentValue || '#000000'}
+                    onChange={(e) => handleColorChange(e.target.value)}
+                    className="w-12 h-10 rounded border"
+                    disabled={disabled}
+                />
+                <Button onClick={generateRandom} type="button" variant="outline">
+                    Random
+                </Button>
+            </div>
+            
+            <div className="flex gap-1 flex-wrap">
+                {presetColors.map((color, index) => (
+                    <button
+                        key={index}
+                        className="w-6 h-6 rounded border hover:border-gray-400"
+                        style={{ backgroundColor: color }}
+                        onClick={() => handleColorChange(color)}
+                        title={color}
+                    />
+                ))}
+            </div>
+        </div>
+    );
+}

@@ -14,6 +14,7 @@ import BaseField from "@/Components/fields/BaseField";
 import MediaField from "@/Components/fields/types/MediaField";
 import TableField from "@/Components/fields/types/TableField";
 import { useCallback } from "react";
+import ProgrammableField from "./types/ProgrammableField";
 
 export default function Builder({ item, data, setData, errors, languages, defaultLanguage, selectedIndex, setSelectedIndex, hideLabel = false }) {
   const updateValue = useCallback((name, value, langCode) => {
@@ -172,6 +173,18 @@ export default function Builder({ item, data, setData, errors, languages, defaul
             fields={field?.attribute?.fields}
             min={1}
             max={1}
+          />
+        );
+      case "programmable":
+        console.log(field)
+        return (
+          <ProgrammableField
+            {...commonProps}
+            componentName={field?.attribute?.componentName}
+            customAttributes={field?.attribute?.customAttributes}
+            bridgeEndpoint={field?.attribute?.bridgeEndpoint}
+            validationEndpoint={field?.attribute?.validationEndpoint}
+            customMethods={field?.attribute?.customMethods}
           />
         );
       default:

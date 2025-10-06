@@ -1,0 +1,30 @@
+<?php
+
+namespace App\Fields;
+
+use AntiCmsBuilder\FieldTypes\ProgrammableField;
+
+class {{ className }} extends ProgrammableField
+{
+    protected string $type = 'programmable';
+
+    public function __construct(string $name = '', string $label = '')
+    {
+        parent::__construct($name, $label);
+        
+        $this->component('{{ componentName }}')
+             ->bridgeEndpoint('/{{ fieldName }}/bridge')
+             ->customAttributes([
+                 'maxFileSize' => 1024 * 1024 * 10, // 10MB
+                 'acceptedTypes' => ['image/*', 'application/pdf'],
+                 'multiple' => false,
+             ])
+             ->method('uploadFile', [$this, 'handleFileUpload']);
+    }
+
+    public function handleFileUpload(array $params, $request)
+    {
+        // Handle file upload logic here
+        return ['success' => true, 'message' => 'File uploaded successfully'];
+    }
+}

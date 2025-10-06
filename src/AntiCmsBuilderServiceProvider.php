@@ -4,6 +4,7 @@ namespace AntiCmsBuilder;
 
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
+use AntiCmsBuilder\Services\ProgrammableFieldService;
 
 class AntiCmsBuilderServiceProvider extends ServiceProvider
 {
@@ -13,18 +14,24 @@ class AntiCmsBuilderServiceProvider extends ServiceProvider
         if ($this->app->runningInConsole()) {
             $this->commands([
                 Console\Commands\PageBuilderCommand::class,
+                Console\Commands\MakeProgrammableFieldCommand::class,
+                Console\Commands\ListProgrammableFieldsCommand::class,
+                Console\Commands\MakeFieldPresetCommand::class,
+                Console\Commands\ProgrammableFieldHelpCommand::class,
             ]);
         }
 
         // Register services
         $this->app->singleton(FieldService::class);
         $this->app->singleton(ComponentManager::class);
+        $this->app->singleton(ProgrammableFieldService::class);
     }
 
     public function boot(): void
     {
         $this->bootPublishing();
         $this->bootRoutes();
+        $this->bootProgrammableFields();
     }
 
     protected function bootPublishing(): void
@@ -68,5 +75,10 @@ class AntiCmsBuilderServiceProvider extends ServiceProvider
                     Route::post('/', [$controller, 'store'])->name("$as.store");
                 });
         });
+    }
+
+    protected function bootProgrammableFields(): void
+    {
+        app(ProgrammableFieldService::class)->registerRoutes();
     }
 }

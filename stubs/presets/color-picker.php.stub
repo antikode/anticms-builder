@@ -1,0 +1,88 @@
+<?php
+
+namespace App\Fields;
+
+use AntiCmsBuilder\FieldTypes\ProgrammableField;
+
+class {{ className }} extends ProgrammableField
+{
+    protected string $type = 'programmable';
+
+    public function __construct(string $name = '', string $label = '')
+    {
+        parent::__construct($name, $label);
+        
+        $this->component('{{ componentName }}')
+             ->bridgeEndpoint('/{{ fieldName }}/bridge')
+             ->validationEndpoint('/{{ fieldName }}/validate')
+             ->customAttributes([
+                 'colorFormat' => 'hex',
+                 'allowAlpha' => false,
+                 'presetColors' => ['#ff0000', '#00ff00', '#0000ff', '#ffff00', '#ff00ff', '#00ffff'],
+             ])
+             ->method('generateRandomColor', [$this, 'generateRandomColor'])
+             ->method('getColorPalette', [$this, 'getColorPalette']);
+    }
+
+    protected function onBridgeRequest(string $method, array $params, $request)
+    {
+        switch ($method) {
+            case 'validateColor':
+                return $this->validateColorValue($params['color'] ?? '');
+            case 'convertColor':
+                return $this->convertColorFormat($params['color'] ?? '', $params['to'] ?? 'hex');
+            default:
+                return parent::onBridgeRequest($method, $params, $request);
+        }
+    }
+
+    protected function onValidationRequest($value, string $fieldName, $request)
+    {
+        if (!preg_match('/^#[a-f0-9]{6}$/i', $value)) {
+            return response()->json([
+                'valid' => false,
+                'message' => 'Please enter a valid hex color (e.g., #ff0000)',
+            ]);
+        }
+
+        return response()->json(['valid' => true, 'message' => 'Valid color']);
+    }
+
+    public function generateRandomColor(array $params, $request)
+    {
+        $color = sprintf('#%06x', mt_rand(0, 0xFFFFFF));
+        return ['color' => $color, 'name' => $this->getColorName($color)];
+    }
+
+    public function getColorPalette(array $params, $request)
+    {
+        $type = $params['type'] ?? 'basic';
+        $palettes = [
+            'basic' => ['#ff0000', '#00ff00', '#0000ff', '#ffff00', '#ff00ff', '#00ffff'],
+            'warm' => ['#ff6b6b', '#ffa500', '#ffd700', '#ff69b4', '#ff1493', '#dc143c'],
+            'cool' => ['#00bfff', '#1e90ff', '#4169e1', '#0000cd', '#4b0082', '#8a2be2'],
+        ];
+        return $palettes[$type] ?? $palettes['basic'];
+    }
+
+    protected function validateColorValue(string $color)
+    {
+        $isValid = preg_match('/^#[a-f0-9]{6}$/i', $color);
+        return response()->json(['valid' => $isValid, 'color' => $color]);
+    }
+
+    protected function convertColorFormat(string $color, string $toFormat)
+    {
+        // Color conversion logic here
+        return response()->json(['success' => true, 'converted' => $color]);
+    }
+
+    protected function getColorName(string $color): string
+    {
+        $colors = [
+            '#ff0000' => 'Red', '#00ff00' => 'Green', '#0000ff' => 'Blue',
+            '#ffff00' => 'Yellow', '#ff00ff' => 'Magenta', '#00ffff' => 'Cyan',
+        ];
+        return $colors[strtolower($color)] ?? 'Custom Color';
+    }
+}

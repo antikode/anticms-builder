@@ -1,0 +1,148 @@
+import React, { useState, useEffect } from "react";
+import { Input } from "@/Components/ui/input";
+import { Button } from "@/Components/ui/button";
+
+export default function {{ componentName }}({
+    // Standard field props
+    name,
+    id,
+    label,
+    disabled = false,
+    required = false,
+    placeholder,
+    setValue,
+    getValue,
+    langCode,
+    errors = [],
+    
+    // Custom attributes from PHP
+    customAttributes = {},
+    isLoading = false,
+    componentState = {},
+    setComponentState,
+    
+    // API functions
+    callBridgeMethod,
+    callCustomMethod,
+    validateValue,
+}) {
+    const {
+        maxLength = 255,
+        // Add more custom attributes here
+    } = customAttributes;
+
+    const [currentValue, setCurrentValue] = useState(getValue(langCode) || '');
+    const [localLoading, setLocalLoading] = useState(false);
+    const [validationErrors, setValidationErrors] = useState([]);
+
+    // Update value when parent data changes
+    useEffect(() => {
+        const value = getValue(langCode) || '';
+        setCurrentValue(value);
+    }, [getValue, langCode]);
+
+    // Handle input changes with validation
+    const handleInputChange = async (e) => {
+        const value = e.target.value;
+        setCurrentValue(value);
+
+        // Validate via bridge API
+        try {
+            const response = await callBridgeMethod('validate', { value });
+            if (response?.valid) {
+                setValue(name, value, langCode);
+                setValidationErrors([]);
+            } else {
+                setValidationErrors(response?.errors || [response?.message || 'Invalid value']);
+            }
+        } catch (error) {
+            console.error('Validation failed:', error);
+            // Still set the value if validation endpoint fails
+            setValue(name, value, langCode);
+        }
+    };
+
+    // Example of calling a custom method
+    const handleExampleAction = async () => {
+        setLocalLoading(true);
+        try {
+            const response = await callCustomMethod('exampleMethod', {
+                value: currentValue,
+                timestamp: new Date().toISOString(),
+            });
+            
+            if (response?.success) {
+                console.log('Example method result:', response.data);
+                // Handle successful response
+            }
+        } catch (error) {
+            console.error('Example method failed:', error);
+        } finally {
+            setLocalLoading(false);
+        }
+    };
+
+    return (
+        <div className="space-y-2">
+            <div className="flex items-center gap-2">
+                <Input
+                    type="text"
+                    id={id}
+                    value={currentValue}
+                    onChange={handleInputChange}
+                    placeholder={placeholder}
+                    disabled={disabled || isLoading || localLoading}
+                    required={required}
+                    maxLength={maxLength}
+                    className="flex-1"
+                />
+                <Button
+                    type="button"
+                    variant="outline"
+                    onClick={handleExampleAction}
+                    disabled={disabled || isLoading || localLoading}
+                    className="whitespace-nowrap"
+                >
+                    {localLoading ? 'Processing...' : 'Example Action'}
+                </Button>
+            </div>
+
+            {/* Character count */}
+            {maxLength && (
+                <div className="text-sm text-gray-500 text-right">
+                    {currentValue.length} / {maxLength}
+                </div>
+            )}
+
+            {/* Validation errors */}
+            {validationErrors.length > 0 && (
+                <div className="text-sm text-red-600 space-y-1">
+                    {validationErrors.map((error, index) => (
+                        <p key={index}>{error}</p>
+                    ))}
+                </div>
+            )}
+
+            {/* Standard field errors */}
+            {errors.length > 0 && (
+                <div className="text-sm text-red-600 space-y-1">
+                    {errors.map((error, index) => (
+                        <p key={index}>{error}</p>
+                    ))}
+                </div>
+            )}
+
+            {/* Loading indicator */}
+            {(isLoading || localLoading) && (
+                <div className="text-sm text-gray-500">
+                    Processing...
+                </div>
+            )}
+
+            {/* Add your custom UI elements here */}
+            <div className="text-sm text-gray-600">
+                Custom field: {{ fieldLabel }}
+            </div>
+        </div>
+    );
+}

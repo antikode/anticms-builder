@@ -1,0 +1,86 @@
+<?php
+
+namespace App\Http\Controllers\Examples;
+
+use App\Http\Controllers\Controller;
+use AntiCmsBuilder\Forms\FormBuilder;
+use AntiCmsBuilder\Tables\TableBuilder;
+use AntiCmsBuilder\Traits\UseCrudController;
+use AntiCmsBuilder\FieldTypes\InputField;
+use AntiCmsBuilder\FieldTypes\TextareaField;
+use App\Fields\{{ className }};
+use App\Models\Event; // Change this to your desired model
+
+class {{ controllerName }} extends Controller
+{
+    use UseCrudController;
+
+    public string $model = Event::class; // Change this to your desired model
+
+    public function tables(TableBuilder $builder): TableBuilder
+    {
+        return $builder
+            ->columns([
+                'id',
+                'title',
+                '{{ fieldName }}',
+                'created_at',
+            ]);
+    }
+
+    public function forms(FormBuilder $builder): FormBuilder
+    {
+        return $builder
+            ->forms([
+                'general' => [
+                    'label' => 'General Information',
+                    'fields' => [
+                        InputField::make()
+                            ->name('title')
+                            ->label('Title')
+                            ->required()
+                            ->placeholder('Enter title'),
+
+                        TextareaField::make()
+                            ->name('description')
+                            ->label('Description')
+                            ->placeholder('Enter description'),
+
+                        // Example usage of your custom field
+                        {{ className }}::make()
+                            ->name('{{ fieldName }}')
+                            ->label('{{ fieldLabel }}')
+                            ->placeholder('Enter {{ fieldLabel }}')
+                            ->caption('This is a custom programmable field')
+                            ->required()
+                            ->customAttribute('maxLength', 100)
+                            ->customAttribute('placeholder', 'Custom placeholder...'),
+
+                        // Another example with different configuration
+                        {{ className }}::make()
+                            ->name('{{ fieldName }}_secondary')
+                            ->label('{{ fieldLabel }} (Secondary)')
+                            ->placeholder('Enter secondary value')
+                            ->caption('Another instance with different configuration')
+                            ->customAttribute('maxLength', 50),
+                    ],
+                ],
+                
+                'advanced' => [
+                    'label' => 'Advanced Settings',
+                    'fields' => [
+                        {{ className }}::make()
+                            ->name('{{ fieldName }}_advanced')
+                            ->label('Advanced {{ fieldLabel }}')
+                            ->placeholder('Advanced configuration')
+                            ->caption('Advanced usage example')
+                            ->customAttributes([
+                                'maxLength' => 500,
+                                'advanced' => true,
+                                'customValidation' => true,
+                            ]),
+                    ],
+                ],
+            ]);
+    }
+}

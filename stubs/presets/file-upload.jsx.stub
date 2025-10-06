@@ -1,0 +1,37 @@
+import React, { useState } from "react";
+import { Button } from "@/Components/ui/button";
+
+export default function {{ componentName }}({
+    name, id, disabled, setValue, getValue, langCode,
+    customAttributes = {}, callCustomMethod,
+}) {
+    const { maxFileSize, acceptedTypes = [], multiple = false } = customAttributes;
+    const [uploading, setUploading] = useState(false);
+
+    const handleFileUpload = async (files) => {
+        setUploading(true);
+        try {
+            // File upload logic here
+            const response = await callCustomMethod('uploadFile', { files });
+            if (response?.success) {
+                setValue(name, response.data.url, langCode);
+            }
+        } finally {
+            setUploading(false);
+        }
+    };
+
+    return (
+        <div className="space-y-2">
+            <input
+                type="file"
+                id={id}
+                multiple={multiple}
+                accept={acceptedTypes.join(',')}
+                disabled={disabled || uploading}
+                onChange={(e) => handleFileUpload(Array.from(e.target.files))}
+            />
+            {uploading && <p>Uploading...</p>}
+        </div>
+    );
+}
