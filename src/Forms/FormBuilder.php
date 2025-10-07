@@ -23,6 +23,7 @@ use Illuminate\Support\Facades\Log;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
 
+/** @package AntiCmsBuilder\Forms */
 final class FormBuilder
 {
     public array $forms;
@@ -34,6 +35,8 @@ final class FormBuilder
     public $saveFunction = null;
 
     public $updateFunction = null;
+
+    public $beforeSaveFunction = null;
 
     public $afterSave = null;
 
@@ -184,6 +187,30 @@ final class FormBuilder
     }
 
     /**
+     * Set a custom before save callback, and the return will be merged to the request
+     *
+     * This allows you to manipulate the request before you actualy save the data
+     * that will be executed instead of the built-in `saveForm()` method.
+     *
+     * Example:
+     * ```php
+     * $formBuilder->beforeSave(function (Request $request) {
+     *     // Custom logic to handle request
+     *     return [];
+     * });
+     * ```
+     *
+     * @param  callable<array>  $save  The callback function to handle saving.
+     * @return static
+     */
+    public function beforeSave(callable $beforeSave)
+    {
+        $this->beforeSaveFunction = $beforeSave;
+
+        return $this;
+    }
+
+    /**
      * Set a custom save callback.
      *
      * This allows you to override the default save logic by providing a closure
@@ -213,11 +240,24 @@ final class FormBuilder
      */
     public function saveForm(Request $request): ?Model
     {
+        $dataFromBeforeSave = [];
+        if ($this->beforeSaveFunction) {
+            $beforeSave = $this->beforeSaveFunction;
+            $args = $this->resolveParams($beforeSave, [
+                'request' => $request,
+                'model' => new $this->model,
+                'operation' => 'create',
+            ]);
+
+            $dataFromBeforeSave = call_user_func_array($beforeSave, $args);
+        }
+
         if ($this->saveFunction) {
             $save = $this->saveFunction;
             $model = $save($request);
         } else {
             $instance = app($this->model);
+            $request->merge($dataFromBeforeSave);
             $dataBody = $request->only($instance->getFillable());
             $model = new $this->model;
             foreach ($dataBody as $key => $value) {
@@ -235,14 +275,14 @@ final class FormBuilder
         }
 
         if ($this->afterSave) {
-            $afterSave = $this->afterSave;
-            $args = $this->resolveParams($afterSave, $model, [
+            $beforeSave = $this->afterSave;
+            $args = $this->resolveParams($beforeSave, $model, [
                 'request' => $request,
                 'model' => $model,
                 'operation' => 'create',
             ]);
 
-            call_user_func_array($afterSave, $args);
+            call_user_func_array($beforeSave, $args);
         }
 
         return $model;
@@ -280,11 +320,24 @@ final class FormBuilder
      */
     public function updateForm($model, Request $request): ?Model
     {
+        $dataFromBeforeSave = [];
+        if ($this->beforeSaveFunction) {
+            $afterSave = $this->beforeSaveFunction;
+            $args = $this->resolveParams($afterSave, $model, [
+                'request' => $request,
+                'record' => $model,
+                'operation' => 'update',
+            ]);
+
+            $dataFromBeforeSave = call_user_func_array($afterSave, $args);
+        }
+
         if ($this->updateFunction) {
             $update = $this->updateFunction;
             $model = $update($request, $model);
         } else {
             $instance = app($this->model);
+            $request->merge($dataFromBeforeSave);
             $dataBody = $request->only($instance->getFillable());
             foreach ($dataBody as $key => $value) {
                 $model->{$key} = $value;
@@ -750,12 +803,14 @@ final class FormBuilder
 
     public function getRules(): array
     {
-        // TODO: this is redundant code, this code is already in \App\Services\TemplateService::validationRequest
+        // TODO: this is redundant code, already in \App\Services\TemplateService::validationRequest
         $validationBuilder = function ($field, $name) {
             $arr = [];
             $validation = [];
-            if (isset($field->attribute->is_required)) {
-                if ($field->attribute->is_required) {
+
+            // Required / Nullable
+            if (isset($field['attribute']['is_required'])) {
+                if ($field['attribute']['is_required']) {
                     $validation[] = 'required';
                 } else {
                     $validation[] = 'nullable';
@@ -763,14 +818,17 @@ final class FormBuilder
             } else {
                 $validation[] = 'nullable';
             }
-            $templateService = new TemplateService;
 
-            $validation = $templateService->fieldValidationRequest($field, $validation);
-            if ($field->field === 'repeater') {
-                foreach ($field->attribute->fields as $item) {
+            $templateService = new TemplateService;
+            $validation = $templateService->fieldValidationRequest(json_decode(json_encode($field)), $validation);
+
+            // Handle repeater fields
+            if (($field['field'] ?? null) === 'repeater' && isset($field['attribute']['fields'])) {
+                foreach ($field['attribute']['fields'] as $item) {
                     $validity = [];
-                    if (isset($item->attribute->is_required)) {
-                        if ($item->attribute->is_required) {
+
+                    if (isset($item['attribute']['is_required'])) {
+                        if ($item['attribute']['is_required']) {
                             $validity[] = 'required';
                         } else {
                             $validity[] = 'nullable';
@@ -778,29 +836,32 @@ final class FormBuilder
                     } else {
                         $validity[] = 'nullable';
                     }
-                    $validity = $templateService->fieldValidationRequest($item, $validity);
 
-                    if (isset($item->attribute->rules)) {
-                        $validity = $item->attribute->rules;
+                    $validity = $templateService->fieldValidationRequest(json_decode(json_encode($item)), $validity);
+
+                    if (isset($item['attribute']['rules'])) {
+                        $validity = $item['attribute']['rules'];
                     }
 
-                    if (isset($item->multilanguage) && $item->multilanguage == true) {
-                        foreach (Translation::getLanguages()['languages'] as $i => $language) {
-                            $arr[$name.'.*.translations.'.$language['code'].'.'.$item->name] = $validity;
+                    if (!empty($item['multilanguage'])) {
+                        foreach (Translation::getLanguages()['languages'] as $language) {
+                            $arr[$name . '.*.translations.' . $language['code'] . '.' . $item['name']] = $validity;
                         }
                     } else {
-                        $arr[$name.'.*.'.$item->name] = $validity;
+                        $arr[$name . '.*.' . $item['name']] = $validity;
                     }
                 }
             }
 
-            if (isset($field->attribute->rules)) {
-                $validation = $field->attribute->rules;
+            // Override with direct rules
+            if (isset($field['attribute']['rules'])) {
+                $validation = $field['attribute']['rules'];
             }
 
-            if (isset($field->multilanguage) && $field->multilanguage == true) {
-                foreach (Translation::getLanguages()['languages'] as $i => $language) {
-                    $arr['translations.'.$language['code'].'.'.$name] = $validation;
+            // Multilanguage field
+            if (!empty($field['multilanguage'])) {
+                foreach (Translation::getLanguages()['languages'] as $language) {
+                    $arr['translations.' . $language['code'] . '.' . $name] = $validation;
                 }
             } else {
                 $arr[$name] = $validation;
@@ -808,15 +869,16 @@ final class FormBuilder
 
             return $arr;
         };
-        $forms = json_decode(json_encode($this->forms));
+
+        $forms = $this->forms; // <-- updated
 
         $rules = [];
         foreach ($forms as $field) {
-            if (property_exists($field, 'name')) {
-                $rule = $validationBuilder($field, $field->name);
+            if (isset($field['name'])) {
+                $rule = $validationBuilder($field, $field['name']);
             } else {
-                foreach ($field->fields as $item) {
-                    $name = str_replace(' ', '__', 'cf '.$field->keyName.' '.$item->name);
+                foreach ($field['fields'] as $item) {
+                    $name = str_replace(' ', '__', 'cf ' . $field['keyName'] . ' ' . $item['name']);
                     $rule = $validationBuilder($item, $name);
                     $rules = array_merge($rules, $rule);
                 }
@@ -828,6 +890,7 @@ final class FormBuilder
 
         return $rules;
     }
+
 
     /**
      * Set a callback to be executed after saving the model.

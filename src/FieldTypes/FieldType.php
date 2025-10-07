@@ -3,6 +3,7 @@
 namespace AntiCmsBuilder\FieldTypes;
 
 use AntiCmsBuilder\FieldManager;
+use Closure;
 use Illuminate\Support\Arr;
 
 use function Laravel\Prompts\confirm;
@@ -244,7 +245,7 @@ abstract class FieldType
         return $this;
     }
 
-    public function rule(string $rule, string $messages = ""): self
+    public function rule(string|Closure $rule, string $messages = ''): self
     {
         if (isset($this->attributes['rules']) === false) {
             $this->attributes['rules'] = [];
@@ -254,9 +255,11 @@ abstract class FieldType
         }
 
         array_push($this->attributes['rules'], $rule);
-        array_push($this->attributes['messages'], array_merge([
-            $rule => $messages,
-        ]));
+        if ($rule instanceof string) {
+            array_push($this->attributes['messages'], array_merge([
+                $rule => $messages,
+            ]));
+        }
 
         return $this;
     }
