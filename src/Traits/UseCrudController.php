@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 
 trait UseCrudController
@@ -293,6 +294,9 @@ trait UseCrudController
             $success = true;
 
             DB::commit();
+        } catch (ValidationException $e) {
+            DB::rollBack();
+            return back()->withErrors($e->errors());
         } catch (Exception $e) {
             $success = false;
             $message = $e->getMessage();
@@ -420,9 +424,12 @@ trait UseCrudController
             $success = true;
             $message = __('Record has been updated successfully');
             DB::commit();
-        } catch (\Throwable $th) {
+        } catch (ValidationException $e) {
+            DB::rollBack();
+            return back()->withErrors($e->errors());
+        } catch (Exception $e) {
             $success = false;
-            $message = $th->getMessage();
+            $message = $e->getMessage();
             Log::error($message);
             DB::rollBack();
             $route = to_route($this->getSharedResource().'.edit', [
