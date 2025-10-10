@@ -23,7 +23,6 @@ use Illuminate\Support\Facades\Log;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
 
-/** @package AntiCmsBuilder\Forms */
 final class FormBuilder
 {
     public array $forms;
@@ -243,7 +242,7 @@ final class FormBuilder
         $dataFromBeforeSave = [];
         if ($this->beforeSaveFunction) {
             $beforeSave = $this->beforeSaveFunction;
-            $args = $this->resolveParams($beforeSave, [
+            $args = $this->resolveParams($beforeSave, $this->model, [
                 'request' => $request,
                 'model' => new $this->model,
                 'operation' => 'create',
@@ -322,14 +321,14 @@ final class FormBuilder
     {
         $dataFromBeforeSave = [];
         if ($this->beforeSaveFunction) {
-            $afterSave = $this->beforeSaveFunction;
-            $args = $this->resolveParams($afterSave, $model, [
+            $beforeSave = $this->beforeSaveFunction;
+            $args = $this->resolveParams($beforeSave, $model, [
                 'request' => $request,
                 'record' => $model,
                 'operation' => 'update',
             ]);
 
-            $dataFromBeforeSave = call_user_func_array($afterSave, $args);
+            $dataFromBeforeSave = call_user_func_array($beforeSave, $args);
         }
 
         if ($this->updateFunction) {
@@ -354,14 +353,14 @@ final class FormBuilder
         }
 
         if ($this->afterSave) {
-            $afterSave = $this->afterSave;
-            $args = $this->resolveParams($afterSave, $model, [
+            $beforeSave = $this->afterSave;
+            $args = $this->resolveParams($beforeSave, $model, [
                 'request' => $request,
                 'record' => $model,
                 'operation' => 'update',
             ]);
 
-            call_user_func_array($afterSave, $args);
+            call_user_func_array($beforeSave, $args);
         }
 
         return $model;
@@ -843,12 +842,12 @@ final class FormBuilder
                         $validity = $item['attribute']['rules'];
                     }
 
-                    if (!empty($item['multilanguage'])) {
+                    if (! empty($item['multilanguage'])) {
                         foreach (Translation::getLanguages()['languages'] as $language) {
-                            $arr[$name . '.*.translations.' . $language['code'] . '.' . $item['name']] = $validity;
+                            $arr[$name.'.*.translations.'.$language['code'].'.'.$item['name']] = $validity;
                         }
                     } else {
-                        $arr[$name . '.*.' . $item['name']] = $validity;
+                        $arr[$name.'.*.'.$item['name']] = $validity;
                     }
                 }
             }
@@ -859,9 +858,9 @@ final class FormBuilder
             }
 
             // Multilanguage field
-            if (!empty($field['multilanguage'])) {
+            if (! empty($field['multilanguage'])) {
                 foreach (Translation::getLanguages()['languages'] as $language) {
-                    $arr['translations.' . $language['code'] . '.' . $name] = $validation;
+                    $arr['translations.'.$language['code'].'.'.$name] = $validation;
                 }
             } else {
                 $arr[$name] = $validation;
@@ -878,7 +877,7 @@ final class FormBuilder
                 $rule = $validationBuilder($field, $field['name']);
             } else {
                 foreach ($field['fields'] as $item) {
-                    $name = str_replace(' ', '__', 'cf ' . $field['keyName'] . ' ' . $item['name']);
+                    $name = str_replace(' ', '__', 'cf '.$field['keyName'].' '.$item['name']);
                     $rule = $validationBuilder($item, $name);
                     $rules = array_merge($rules, $rule);
                 }
@@ -890,7 +889,6 @@ final class FormBuilder
 
         return $rules;
     }
-
 
     /**
      * Set a callback to be executed after saving the model.
