@@ -256,10 +256,17 @@ abstract class FieldType
 
         array_push($this->attributes['rules'], $rule);
         if ($rule instanceof string) {
-            array_push($this->attributes['messages'], array_merge([
+            $this->attributes['messages'] = array_merge($this->attributes['messages'], [
                 $rule => $messages,
-            ]));
+            ]);
         }
+
+        return $this;
+    }
+
+    public function validationRuleCalled(Closure $callback): self
+    {
+        $this->attributes['validationRuleCalled'] = $callback;
 
         return $this;
     }

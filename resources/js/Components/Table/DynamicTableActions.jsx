@@ -128,7 +128,6 @@ export default function DynamicTableActions({
           return (
             <div key={idx} className="relative">
               <Button
-                className={buttonClass}
                 onClick={() => handleActionClick(action, idx)}
                 disabled={isDisabled}
                 title={action.tooltip}
@@ -181,21 +180,22 @@ export default function DynamicTableActions({
                       )}
 
                       <div className="flex justify-end mt-4">
-                        <button
+                        <Button
                           type="button"
+                          variant="ghost"
                           className="btn_secondary mr-2"
                           onClick={() => setOpenModal(null)}
                           disabled={loading}
                         >
                           Cancel
-                        </button>
-                        <button
+                        </Button>
+                        <Button
                           type="submit"
-                          className={`btn_${action.color || 'primary'}`}
+                          // className={action.styles?.buttonClass || `btn_${action.color || 'primary'}`}
                           disabled={loading}
                         >
                           {loading ? "Processing..." : "Confirm"}
-                        </button>
+                        </Button>
                       </div>
                     </div>
                   </form>

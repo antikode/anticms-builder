@@ -64,7 +64,7 @@ final class TableBuilder
         $query = $this->query ?? $this->defaultQuery();
         $request = request();
         $tables = $this->tables;
-        
+
         // Store original headers for processing (including hidden ones for search)
         $originalHeaders = $tables['headers'];
 
@@ -247,7 +247,7 @@ final class TableBuilder
         return $this;
     }
 
-    public function rowActions(array $rowActions): self
+    public function rowActions(callable|array $rowActions): self
     {
         $this->tables['rowActions'] = $rowActions;
 
@@ -297,17 +297,52 @@ final class TableBuilder
         $processed = [];
         $resolver = app(Resolver::class);
 
-        foreach ($this->tables['rowActions'] as $action) {
+        // Support callable rowActions that receive the current record
+        $rowActions = $this->tables['rowActions'];
+        if (is_callable($rowActions)) {
+            $rowActions = $rowActions($model);
+        }
+
+        foreach ($rowActions as $action) {
+            // Handle separator arrays directly
+            if (is_array($action) && isset($action['type']) && $action['type'] === 'separator') {
+                $processed[] = $action;
+                continue;
+            }
+
             $actionData = $action;
             if ($action instanceof RowAction) {
                 $actionData = $action->toArray();
             }
+
+            // Process callbacks with the current record
+            if (isset($actionData['callbacks']) && is_array($actionData['callbacks'])) {
+                foreach ($actionData['callbacks'] as $property => $callback) {
+                    if (is_callable($callback)) {
+                        $args = $resolver->params($model, $callback);
+                        $actionData[$property] = $callback(...$args);
+                    }
+                }
+                // Remove callbacks from final output
+                unset($actionData['callbacks']);
+            }
+
+            // Process route callbacks
             if (isset($actionData['route'])) {
                 if ($actionData['route'] instanceof \Closure) {
                     $args = $resolver->params($model, $actionData['route']);
                     $actionData['route'] = $actionData['route'](...$args);
                 }
             }
+
+            // Process data callbacks
+            if (isset($actionData['data'])) {
+                if ($actionData['data'] instanceof \Closure) {
+                    $args = $resolver->params($model, $actionData['data']);
+                    $actionData['data'] = $actionData['data'](...$args);
+                }
+            }
+
             if (! $this->shouldHideAction($actionData, $model)) {
                 $processed[] = $actionData;
             }

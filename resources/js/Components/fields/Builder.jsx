@@ -35,6 +35,11 @@ export default function Builder({ item, data, setData, errors, languages, defaul
   }, [setData]);
 
   const renderField = useCallback((field, fieldName) => {
+    let code = null;
+    if (field.multilanguage) {
+      code = languages[selectedIndex].code
+    }
+
     const commonProps = {
       data,
       errors,
@@ -42,7 +47,7 @@ export default function Builder({ item, data, setData, errors, languages, defaul
       defaultLanguage,
       selectedIndex,
       setSelectedIndex,
-      id: fieldName + '_' + languages[selectedIndex].code,
+      id: fieldName + '_' + code,
       name: fieldName,
       label: hideLabel ? <div className="pb-3"></div> : field?.label,
       required: field?.attribute?.is_required,

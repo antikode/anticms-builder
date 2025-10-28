@@ -66,8 +66,15 @@ export default function Index({ title, tables, resource, permissions, languages,
           const id = row.original.id;
           const rowData = { ...origin, id };
 
+          // Use DynamicRowActions for plugin-provided actions
           if (rowData._actions && rowData._actions.length > 0) {
-            return <DynamicRowActions actions={rowData._actions} row={rowData} />;
+            return (
+              <DynamicRowActions
+                actions={rowData._actions}
+                row={rowData}
+                ActionDropdown={ActionDropdown}
+              />
+            );
           }
 
           const actions = [];
