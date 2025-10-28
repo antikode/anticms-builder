@@ -25,7 +25,38 @@ class ConditionalFieldsExample
     public function forms(FormBuilder $builder): FormBuilder
     {
         return $builder->forms([
-            // Example 1: Show/hide based on select field value
+            // ===========================================
+            // STATIC VISIBILITY EXAMPLES
+            // ===========================================
+
+            // Example 1: Always hidden field (useful for internal IDs or system fields)
+            InputField::make()
+                ->name('internal_reference')
+                ->label('Internal Reference')
+                ->hidden()
+                ->value('REF-' . uniqid())
+                ->toArray(),
+
+            // Example 2: Conditionally visible based on PHP logic (not form values)
+            // Replace with your actual authentication logic
+            InputField::make()
+                ->name('admin_notes')
+                ->label('Admin Notes')
+                ->visible(true) // Replace with: auth()->check() && auth()->user()->isAdmin()
+                ->toArray(),
+
+            // Example 3: Hidden based on PHP boolean
+            InputField::make()
+                ->name('beta_field')
+                ->label('Beta Feature')
+                ->hidden(false) // Replace with: !config('app.beta_features_enabled')
+                ->toArray(),
+
+            // ===========================================
+            // CONDITIONAL VISIBILITY EXAMPLES
+            // ===========================================
+
+            // Example 4: Show/hide based on select field value
             SelectField::make()
                 ->name('product_type')
                 ->label('Product Type')
@@ -65,7 +96,7 @@ class ConditionalFieldsExample
                 ->visibleWhen('product_type', ['physical', 'service'], 'in')
                 ->toArray(),
 
-            // Example 3: Toggle-based conditional visibility
+            // Example 6: Toggle-based conditional visibility
             ToggleField::make()
                 ->name('has_discount')
                 ->label('Has Discount?')
@@ -96,7 +127,7 @@ class ConditionalFieldsExample
                 ->visibleWhen('has_discount', true)
                 ->toArray(),
 
-            // Example 4: Using hideWhen instead of visibleWhen
+            // Example 7: Using hideWhen instead of visibleWhen
             SelectField::make()
                 ->name('stock_status')
                 ->label('Stock Status')
@@ -117,7 +148,7 @@ class ConditionalFieldsExample
                 ->hideWhen('stock_status', 'out_stock')
                 ->toArray(),
 
-            // Example 5: Using comparison operators
+            // Example 8: Using comparison operators
             InputField::make()
                 ->name('price')
                 ->label('Price')
@@ -135,7 +166,7 @@ class ConditionalFieldsExample
                 ->visibleWhen('price', 100, '>')
                 ->toArray(),
 
-            // Example 6: Multiple conditions can be chained
+            // Example 9: Multiple conditions can be chained
             ToggleField::make()
                 ->name('is_featured')
                 ->label('Featured Product?')
@@ -150,7 +181,7 @@ class ConditionalFieldsExample
                 ->visibleWhen('product_type', 'out_stock', '!=')
                 ->toArray(),
 
-            // Example 7: Using not_in operator
+            // Example 10: Using not_in operator
             InputField::make()
                 ->name('special_handling_note')
                 ->label('Special Handling Note')

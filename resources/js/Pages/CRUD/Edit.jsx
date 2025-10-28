@@ -1,6 +1,6 @@
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout.jsx";
 import CardWhite from "@/Components/global/CardWhite.jsx";
-import { useForm } from "@inertiajs/react";
+import { useForm, router } from "@inertiajs/react";
 import { useState, useCallback, useMemo } from 'react';
 import CreateEditFormWithBuilder from "../../Components/form/CreateEditFormWithBuilder";
 
@@ -9,6 +9,17 @@ export default function Edit({ resources, authors, fields, customFields, title, 
   const [isSubmitting, setIsSubmitting] = useState(false);
   console.log("OKS")
   console.log("SAYAP")
+
+  // Extract query parameters from URL
+  const queryParams = useMemo(() => {
+    if (typeof window === 'undefined') return {};
+    const params = new URLSearchParams(window.location.search);
+    const paramsObject = {};
+    for (const [key, value] of params.entries()) {
+      paramsObject[key] = value;
+    }
+    return paramsObject;
+  }, []);
 
   const initialFormState = useMemo(() => {
     // Ensure we have valid data to prevent hydration mismatches
@@ -49,7 +60,14 @@ export default function Edit({ resources, authors, fields, customFields, title, 
     setIsSubmitting(true);
 
     try {
-      put(route(`${resource}.update`, resources.id), {
+      // Merge form data with query parameters
+      const dataWithParams = {
+        ...data,
+        ...queryParams
+      };
+
+      // Use Inertia router directly to send custom data
+      router.put(route(`${resource}.update`, resources.id), dataWithParams, {
         preserveState: true,
         preserveScroll: true,
         onError: (errors) => {
@@ -67,12 +85,15 @@ export default function Edit({ resources, authors, fields, customFields, title, 
               break;
             }
           }
+        },
+        onFinish: () => {
+          setIsSubmitting(false);
         }
       });
-    } finally {
+    } catch (error) {
       setIsSubmitting(false);
     }
-  }, [data, setSelectedIndex]);
+  }, [data, queryParams, setSelectedIndex, resource, resources.id, languages]);
 
   return (
     <AuthenticatedLayout header={`Edit ${title}`}>

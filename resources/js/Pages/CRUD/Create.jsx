@@ -1,6 +1,6 @@
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout.jsx";
 import CardWhite from "@/Components/global/CardWhite.jsx";
-import { useForm } from "@inertiajs/react";
+import { useForm, router } from "@inertiajs/react";
 import { format } from "date-fns"
 import { useState, useCallback, useMemo, useEffect } from 'react';
 import { pluck } from "@/lib/utils";
@@ -9,6 +9,17 @@ import CreateEditFormWithBuilder from "../../Components/form/CreateEditFormWithB
 export default function Create({ auth, authors, title, customFields, resource, slug, hasMeta, hasStatus, languages, defaultLanguage }) {
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Extract query parameters from URL
+  const queryParams = useMemo(() => {
+    if (typeof window === 'undefined') return {};
+    const params = new URLSearchParams(window.location.search);
+    const paramsObject = {};
+    for (const [key, value] of params.entries()) {
+      paramsObject[key] = value;
+    }
+    return paramsObject;
+  }, []);
 
   let defaultValues = {};
   pluck(customFields, 'name').forEach((c, i) => {
@@ -60,7 +71,14 @@ export default function Create({ auth, authors, title, customFields, resource, s
     setIsSubmitting(true);
 
     try {
-      post(route(`${resource}.store`), {
+      // Merge form data with query parameters
+      const dataWithParams = {
+        ...data,
+        ...queryParams
+      };
+
+      // Use Inertia router directly to send custom data
+      router.post(route(`${resource}.store`), dataWithParams, {
         preserveState: true,
         preserveScroll: true,
         onError: (errors) => {
@@ -79,12 +97,15 @@ export default function Create({ auth, authors, title, customFields, resource, s
               break;
             }
           }
+        },
+        onFinish: () => {
+          setIsSubmitting(false);
         }
       });
-    } finally {
+    } catch (error) {
       setIsSubmitting(false);
     }
-  }, [post, setSelectedIndex]);
+  }, [data, queryParams, setSelectedIndex, resource, languages]);
 
   return (
     <AuthenticatedLayout header={`Create ${title}`}>

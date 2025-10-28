@@ -303,6 +303,7 @@ trait UseCrudController
             Log::error($message);
             DB::rollBack();
             $route = $this->getSharedResource().'.create';
+            throw $e;
         }
 
         return to_route($route)->with('message', [
@@ -435,6 +436,7 @@ trait UseCrudController
             $route = to_route($this->getSharedResource().'.edit', [
                 'id' => $data->id,
             ]);
+            throw $e;
         }
 
         return $route->with('message', [

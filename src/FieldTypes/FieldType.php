@@ -55,6 +55,8 @@ abstract class FieldType
             'attribute' => $this->attributes,
             'visibleWhen' => $this->attributes['visibleWhen'] ?? null,
             'hideWhen' => $this->attributes['hideWhen'] ?? null,
+            'hidden' => $this->attributes['hidden'] ?? false,
+            'visible' => $this->attributes['visible'] ?? true,
         ];
     }
 
@@ -315,6 +317,32 @@ abstract class FieldType
             'value' => $value,
             'operator' => $operator,
         ];
+
+        return $this;
+    }
+
+    /**
+     * Set the field to be hidden (static, not conditional)
+     *
+     * @param  bool  $hidden  Whether the field should be hidden
+     * @return T
+     */
+    public function hidden(bool $hidden = true): self
+    {
+        $this->attributes['hidden'] = $hidden;
+
+        return $this;
+    }
+
+    /**
+     * Set the field to be visible (static, not conditional)
+     *
+     * @param  bool  $visible  Whether the field should be visible
+     * @return T
+     */
+    public function visible(bool $visible = true): self
+    {
+        $this->attributes['visible'] = $visible;
 
         return $this;
     }

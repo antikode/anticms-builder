@@ -69,6 +69,16 @@ export default function Builder({ item, data, setData, errors, languages, defaul
 
   // Check if field should be visible based on visibleWhen and hideWhen conditions
   const isFieldVisible = useMemo(() => {
+    // Check static hidden property first
+    if (item.hidden === true) {
+      return false;
+    }
+
+    // Check static visible property
+    if (item.visible === false) {
+      return false;
+    }
+
     const visibleWhen = item.visibleWhen;
     const hideWhen = item.hideWhen;
 
@@ -93,7 +103,7 @@ export default function Builder({ item, data, setData, errors, languages, defaul
 
     // If only hideWhen exists and didn't match, field is visible
     return true;
-  }, [item.visibleWhen, item.hideWhen, data, evaluateCondition]);
+  }, [item.visibleWhen, item.hideWhen, item.hidden, item.visible, data, evaluateCondition]);
 
   const renderField = useCallback((field, fieldName) => {
     let code = null;
