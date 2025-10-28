@@ -53,6 +53,8 @@ abstract class FieldType
             'field' => $this->type,
             'multilanguage' => $this->multilanguage,
             'attribute' => $this->attributes,
+            'visibleWhen' => $this->attributes['visibleWhen'] ?? null,
+            'hideWhen' => $this->attributes['hideWhen'] ?? null,
         ];
     }
 
@@ -267,6 +269,52 @@ abstract class FieldType
     public function validationRuleCalled(Closure $callback): self
     {
         $this->attributes['validationRuleCalled'] = $callback;
+
+        return $this;
+    }
+
+    /**
+     * Show this field when the specified field has a certain value
+     *
+     * @param  string  $fieldName  The name of the field to watch
+     * @param  mixed  $value  The value that should trigger visibility (can be a single value or array of values)
+     * @param  string  $operator  The comparison operator: '=', '!=', 'in', 'not_in', '>', '<', '>=', '<='
+     * @return T
+     */
+    public function visibleWhen(string $fieldName, $value, string $operator = '='): self
+    {
+        if (! isset($this->attributes['visibleWhen'])) {
+            $this->attributes['visibleWhen'] = [];
+        }
+
+        $this->attributes['visibleWhen'][] = [
+            'field' => $fieldName,
+            'value' => $value,
+            'operator' => $operator,
+        ];
+
+        return $this;
+    }
+
+    /**
+     * Hide this field when the specified field has a certain value
+     *
+     * @param  string  $fieldName  The name of the field to watch
+     * @param  mixed  $value  The value that should trigger hiding (can be a single value or array of values)
+     * @param  string  $operator  The comparison operator: '=', '!=', 'in', 'not_in', '>', '<', '>=', '<='
+     * @return T
+     */
+    public function hideWhen(string $fieldName, $value, string $operator = '='): self
+    {
+        if (! isset($this->attributes['hideWhen'])) {
+            $this->attributes['hideWhen'] = [];
+        }
+
+        $this->attributes['hideWhen'][] = [
+            'field' => $fieldName,
+            'value' => $value,
+            'operator' => $operator,
+        ];
 
         return $this;
     }

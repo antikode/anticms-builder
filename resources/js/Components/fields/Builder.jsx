@@ -13,7 +13,7 @@ import PostRelatedField from "@/Components/fields/types/PostRelatedField";
 import BaseField from "@/Components/fields/BaseField";
 import MediaField from "@/Components/fields/types/MediaField";
 import TableField from "@/Components/fields/types/TableField";
-import { useCallback } from "react";
+import { useCallback, useMemo } from "react";
 import ProgrammableField from "./types/ProgrammableField";
 
 export default function Builder({ item, data, setData, errors, languages, defaultLanguage, selectedIndex, setSelectedIndex, hideLabel = false }) {
@@ -33,6 +33,67 @@ export default function Builder({ item, data, setData, errors, languages, defaul
       })
     }));
   }, [setData]);
+
+  // Helper function to get field value from data
+  const getFieldValue = useCallback((fieldName) => {
+    return data[fieldName] ?? null;
+  }, [data]);
+
+  // Helper function to evaluate condition
+  const evaluateCondition = useCallback((condition) => {
+    const fieldValue = getFieldValue(condition.field);
+    const targetValue = condition.value;
+    const operator = condition.operator || '=';
+
+    switch (operator) {
+      case '=':
+        return fieldValue == targetValue;
+      case '!=':
+        return fieldValue != targetValue;
+      case 'in':
+        return Array.isArray(targetValue) && targetValue.includes(fieldValue);
+      case 'not_in':
+        return Array.isArray(targetValue) && !targetValue.includes(fieldValue);
+      case '>':
+        return Number(fieldValue) > Number(targetValue);
+      case '<':
+        return Number(fieldValue) < Number(targetValue);
+      case '>=':
+        return Number(fieldValue) >= Number(targetValue);
+      case '<=':
+        return Number(fieldValue) <= Number(targetValue);
+      default:
+        return true;
+    }
+  }, [getFieldValue]);
+
+  // Check if field should be visible based on visibleWhen and hideWhen conditions
+  const isFieldVisible = useMemo(() => {
+    const visibleWhen = item.visibleWhen;
+    const hideWhen = item.hideWhen;
+
+    // If both are null/undefined, field is visible by default
+    if (!visibleWhen && !hideWhen) {
+      return true;
+    }
+
+    // Check hideWhen conditions first (if any condition matches, field is hidden)
+    if (hideWhen && Array.isArray(hideWhen)) {
+      const shouldHide = hideWhen.some(condition => evaluateCondition(condition));
+      if (shouldHide) {
+        return false;
+      }
+    }
+
+    // Check visibleWhen conditions (all conditions must match for field to be visible)
+    if (visibleWhen && Array.isArray(visibleWhen)) {
+      const shouldShow = visibleWhen.every(condition => evaluateCondition(condition));
+      return shouldShow;
+    }
+
+    // If only hideWhen exists and didn't match, field is visible
+    return true;
+  }, [item.visibleWhen, item.hideWhen, data, evaluateCondition]);
 
   const renderField = useCallback((field, fieldName) => {
     let code = null;
@@ -195,6 +256,11 @@ export default function Builder({ item, data, setData, errors, languages, defaul
         return null;
     }
   }, [data, errors, languages, defaultLanguage, updateValue]);
+
+  // Don't render if field should be hidden
+  if (!isFieldVisible) {
+    return null;
+  }
 
   return (
     <div
