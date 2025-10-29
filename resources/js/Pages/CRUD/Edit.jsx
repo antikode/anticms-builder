@@ -53,7 +53,7 @@ export default function Edit({ resources, authors, fields, customFields, title, 
 
   }, [resources, fields, languages]);
 
-  const { data, setData, errors, put } = useForm(initialFormState);
+  const { data, setData, errors, setError, put } = useForm(initialFormState);
 
   const submit = useCallback(async (e) => {
     e.preventDefault();
@@ -79,6 +79,7 @@ export default function Edit({ resources, authors, fields, customFields, title, 
               'meta.description',
               'meta.keywords'
             ].some(field => errors[`translations.${lang.code}.${field}`]);
+            setError(errors)
 
             if (hasError) {
               setSelectedIndex(languages.findIndex(l => l.code === lang.code));

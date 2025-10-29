@@ -64,7 +64,7 @@ export default function Create({ auth, authors, title, customFields, resource, s
 
   }, [auth?.user?.id]);
 
-  const { data, setData, errors, post } = useForm(initialFormState);
+  const { data, setData, errors, setError } = useForm(initialFormState);
 
   const submit = useCallback(async (e) => {
     e.preventDefault();
@@ -82,7 +82,7 @@ export default function Create({ auth, authors, title, customFields, resource, s
         preserveState: true,
         preserveScroll: true,
         onError: (errors) => {
-          console.log(errors)
+          setError(errors)
           for (const lang of languages) {
             const hasError = [
               'title',
