@@ -4,11 +4,9 @@ import { useForm, router } from "@inertiajs/react";
 import { useState, useCallback, useMemo } from 'react';
 import CreateEditFormWithBuilder from "../../Components/form/CreateEditFormWithBuilder";
 
-export default function Edit({ resources, authors, fields, customFields, title, resource, slug, hasMeta, hasStatus, languages, defaultLanguage }) {
+export default function Edit({ resources, authors, fields, customFields, title, resource, slug, hasMeta, hasStatus, languages, defaultLanguage, statusOptions = [] }) {
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  console.log("OKS")
-  console.log("SAYAP")
 
   // Extract query parameters from URL
   const queryParams = useMemo(() => {
@@ -119,6 +117,7 @@ export default function Edit({ resources, authors, fields, customFields, title, 
           hasStatus={hasStatus}
           resource={resource}
           hasAuthors={!!authors?.length}
+          statusOptions={statusOptions}
         />
       </CardWhite>
     </AuthenticatedLayout>

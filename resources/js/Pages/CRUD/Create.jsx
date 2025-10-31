@@ -6,7 +6,7 @@ import { useState, useCallback, useMemo, useEffect } from 'react';
 import { pluck } from "@/lib/utils";
 import CreateEditFormWithBuilder from "../../Components/form/CreateEditFormWithBuilder";
 
-export default function Create({ auth, authors, title, customFields, resource, slug, hasMeta, hasStatus, languages, defaultLanguage }) {
+export default function Create({ auth, authors, title, customFields, resource, slug, hasMeta, hasStatus, languages, defaultLanguage, statusOptions = [] }) {
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -130,6 +130,7 @@ export default function Create({ auth, authors, title, customFields, resource, s
           hasStatus={hasStatus}
           resource={resource}
           hasAuthors={!!authors?.length}
+          statusOptions={statusOptions}
         />
       </CardWhite>
     </AuthenticatedLayout>

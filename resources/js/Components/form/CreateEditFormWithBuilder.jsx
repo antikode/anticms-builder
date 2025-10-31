@@ -30,6 +30,7 @@ export default function CreateEditFormWithBuilder({
   hasMeta = true,
   hasStatus = true,
   hasAuthors = true,
+  statusOptions = [],
 }) {
   return (
     <div className="flex flex-col gap-4 w-full relative">
@@ -124,6 +125,7 @@ export default function CreateEditFormWithBuilder({
             <div className="flex flex-col gap-4 max-w-[300px] w-full mt-5">
               {hasStatus && (
                 <StatusSection
+                  options={statusOptions}
                   data={data}
                   setData={setData}
                   errors={errors}
