@@ -215,9 +215,9 @@ final class InfoListBuilder
      *
      * @param array $entry The entry configuration
      * @param mixed $value The raw value to format
-     * @return string The formatted display value
+     * @return string|array The formatted display value
      */
-    private function formatDisplayValue(array $entry, $value): string
+    private function formatDisplayValue(array $entry, $value)
     {
         if ($value === null || $value === '') {
             return '—';
@@ -239,13 +239,106 @@ final class InfoListBuilder
                 return is_array($value) ? implode(', ', $value) : $value;
 
             case 'relationship':
-                if (is_object($value) && method_exists($value, 'getDisplayName')) {
-                    return $value->getDisplayName();
-                }
-                return is_object($value) ? ($value->name ?? $value->title ?? $value->id) : $value;
+                return $this->formatRelationshipValue($entry, $value);
 
             default:
                 return (string) $value;
         }
+    }
+
+    /**
+     * Format relationship values based on display mode
+     *
+     * @param array $entry The entry configuration
+     * @param mixed $value The relationship value
+     * @return string|array The formatted relationship value
+     */
+    private function formatRelationshipValue(array $entry, $value)
+    {
+        $displayMode = $entry['display_mode'] ?? 'default';
+        $displayColumn = $entry['display_column'] ?? 'name';
+
+        switch ($displayMode) {
+            case 'list':
+                return $this->formatRelationshipList($value, $entry['columns'] ?? []);
+
+            case 'comma_list':
+                return $this->formatRelationshipCommaList($value, $displayColumn, $entry['separator'] ?? ', ', $entry['item_limit'] ?? null);
+
+            default:
+                // Default single relationship display
+                if (is_object($value) && method_exists($value, 'getDisplayName')) {
+                    return $value->getDisplayName();
+                }
+                if (is_object($value)) {
+                    return $value->{$displayColumn} ?? $value->name ?? $value->title ?? $value->id ?? '—';
+                }
+                return (string) $value;
+        }
+    }
+
+    /**
+     * Format a relationship as a list with multiple columns
+     *
+     * @param mixed $value The relationship value (collection or model)
+     * @param array $columns The columns to display
+     * @return array The formatted list
+     */
+    private function formatRelationshipList($value, array $columns): array
+    {
+        if (!is_iterable($value)) {
+            return [];
+        }
+
+        $items = [];
+        foreach ($value as $item) {
+            if (is_object($item)) {
+                $row = [];
+                foreach ($columns as $column) {
+                    $row[$column] = data_get($item, $column);
+                }
+                $items[] = $row;
+            }
+        }
+
+        return $items;
+    }
+
+    /**
+     * Format a relationship as a comma-separated list
+     *
+     * @param mixed $value The relationship value
+     * @param string $column The column to display
+     * @param string $separator The separator between items
+     * @param int|null $limit The maximum number of items to show
+     * @return string The formatted comma-separated list
+     */
+    private function formatRelationshipCommaList($value, string $column, string $separator, ?int $limit): string
+    {
+        if (!is_iterable($value)) {
+            return is_object($value) ? (string)($value->{$column} ?? $value->name ?? '—') : '—';
+        }
+
+        $items = [];
+        $count = 0;
+        $totalCount = 0;
+
+        foreach ($value as $item) {
+            $totalCount++;
+            if ($limit && $count >= $limit) {
+                break;
+            }
+            if (is_object($item)) {
+                $items[] = (string)($item->{$column} ?? $item->name ?? '—');
+                $count++;
+            }
+        }
+
+        if ($limit && $totalCount > $limit) {
+            $remaining = $totalCount - $limit;
+            return implode($separator, $items) . " and {$remaining} more";
+        }
+
+        return implode($separator, $items) ?: '—';
     }
 }

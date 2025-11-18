@@ -329,8 +329,40 @@ trait UseCrudController
 
         $this->bootsrapp();
 
-        $infoList = $this->infoList(InfoListBuilder::make($this->model)->record($data))
-            ->build();
+        // Load relations required by infoList entries
+        $infoListBuilder = InfoListBuilder::make($this->model)->record($data);
+        $infoListRelationships = $this->getInfoListRelationships($infoListBuilder);
+        
+        if (! empty($infoListRelationships)) {
+            $data->load($infoListRelationships);
+            $infoListBuilder->record($data);
+        }
+
+        $infoList = $infoListBuilder->build();
+
+        // Build relation managers
+        $relationManagers = [];
+        foreach ($this->relations() as $relationManager) {
+            if ($relationManager->canView($data)) {
+                $relatedData = $relationManager->getRelatedData($data);
+                if ($relatedData && count($relatedData) > 0) {
+                    $tableBuilder = $relationManager->table(
+                        TableBuilder::make(get_class($relatedData->first()))
+                    );
+                    
+                    $relationManagers[] = [
+                        'name' => $relationManager->getRelationName(),
+                        'label' => $relationManager->getLabel(),
+                        'icon' => $relationManager->getIcon(),
+                        'table' => $tableBuilder->build(),
+                        'data' => $relatedData->toArray(),
+                        'canCreate' => $relationManager->canCreate($data),
+                        'canEdit' => $relationManager->canEdit($data),
+                        'canDelete' => $relationManager->canDelete($data),
+                    ];
+                }
+            }
+        }
 
         $translationModel = config('anti-cms-builder.models.translation');
         $languages = $translationModel::getLanguages()['languages'];
@@ -339,6 +371,7 @@ trait UseCrudController
         return Inertia::render('CRUD/Show', [
             'resources' => $data,
             'infoList' => $infoList,
+            'relationManagers' => $relationManagers,
             'statusOptions' => $this->statusOptions(),
             'languages' => $languages,
             'defaultLanguage' => $defaultLanguage,
@@ -506,5 +539,99 @@ trait UseCrudController
     public function infoList(InfoListBuilder $builder): InfoListBuilder
     {
         return $builder;
+    }
+
+    /**
+     * Register relation managers to display in the detail view
+     *
+     * Example:
+     * public function relations(): array
+     * {
+     *     return [
+     *         new OrdersRelationManager(),
+     *         new CommentsRelationManager(),
+     *     ];
+     * }
+     *
+     * @return array Array of RelationManager instances
+     */
+    public function relations(): array
+    {
+        return [];
+    }
+
+    /**
+     * Extract relationship names from infoList entries
+     * Supports nested relationships using dot notation
+     *
+     * @param InfoListBuilder $infoListBuilder The InfoListBuilder instance
+     * @return array Array of relationship names to load
+     */
+    private function getInfoListRelationships(InfoListBuilder $infoListBuilder): array
+    {
+        $relationships = [];
+        $infoList = $infoListBuilder->infoList;
+
+        // Process top-level entries
+        if (isset($infoList['entries'])) {
+            $relationships = array_merge(
+                $relationships,
+                $this->extractRelationshipsFromEntries($infoList['entries'])
+            );
+        }
+
+        // Process section entries
+        if (isset($infoList['sections'])) {
+            foreach ($infoList['sections'] as $section) {
+                if (isset($section['entries'])) {
+                    $relationships = array_merge(
+                        $relationships,
+                        $this->extractRelationshipsFromEntries($section['entries'])
+                    );
+                }
+            }
+        }
+
+        return array_unique($relationships);
+    }
+
+    /**
+     * Extract relationships from an array of entries
+     *
+     * @param array $entries Array of entry configurations
+     * @return array Array of relationship names
+     */
+    private function extractRelationshipsFromEntries(array $entries): array
+    {
+        $relationships = [];
+
+        foreach ($entries as $entry) {
+            if (!isset($entry['name'])) {
+                continue;
+            }
+
+            $name = $entry['name'];
+            
+            // Skip translation entries
+            if (str_contains($name, 'translations.')) {
+                continue;
+            }
+
+            // Extract relationship name from dot notation
+            if (str_contains($name, '.')) {
+                $parts = explode('.', $name);
+                $relationName = $parts[0];
+                
+                // Add the root relationship
+                $relationships[] = $relationName;
+
+                // Add nested relationships if needed
+                if (count($parts) > 2) {
+                    $relationships[] = implode('.', array_slice($parts, 0, -1));
+                }
+            }
+        }
+
+        return array_unique($relationships);
     }
 }
