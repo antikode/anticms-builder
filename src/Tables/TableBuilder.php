@@ -68,12 +68,29 @@ final class TableBuilder
         // Store original headers for processing (including hidden ones for search)
         $originalHeaders = $tables['headers'];
 
-        $searchableColumns = Arr::pluck(Arr::where($originalHeaders, fn ($header) => isset($header['searchable']) && $header['searchable'] == true), 'column');
+        $searchableColumns = Arr::pluck(Arr::where($originalHeaders, function ($header) {
+            return isset($header['searchable']) && is_bool($header['searchable']) && $header['searchable'] == true;
+        }), 'column');
+
         if (count($searchableColumns) > 0) {
             $query->when($request->filled('q'), function (Builder $q) use ($request, $searchableColumns) {
                 $q->where(function (Builder $query) use ($request, $searchableColumns) {
                     foreach ($searchableColumns as $column) {
                         $this->addNestedOrWhereHas($query, $column, $request->q);
+                    }
+                });
+            });
+        }
+
+        $searchableCallbacks = Arr::where($originalHeaders, function ($header) {
+            return isset($header['searchable']) && is_callable($header['searchable']);
+        });
+
+        if (count($searchableCallbacks) > 0) {
+            $query->when($request->filled('q'), function (Builder $q) use ($request, $searchableCallbacks) {
+                $q->where(function (Builder $query) use ($request, $searchableCallbacks) {
+                    foreach ($searchableCallbacks as $header) {
+                        $this->addNestedOrWhereHasCallback($query, $header['column'], $header['searchable'], $request->q);
                     }
                 });
             });
@@ -111,12 +128,16 @@ final class TableBuilder
 
         // Filter out hidden columns from headers for frontend
         $tables['headers'] = array_values(array_filter($tables['headers'], function ($header) {
-            return !isset($header['hidden']) || $header['hidden'] !== true;
+            return ! isset($header['hidden']) || $header['hidden'] !== true;
         }));
 
         // Process headers once
         foreach ($tables['headers'] as $key => $table) {
             $tables['headers'][$key]['accessorKey'] = $table['id'];
+            // Unset searchable callback closures to prevent serialization issues
+            if (isset($tables['headers'][$key]['searchable']) && is_callable($tables['headers'][$key]['searchable'])) {
+                unset($tables['headers'][$key]['searchable']);
+            }
         }
 
         foreach ($paging->items() as $keyI => $item) {
@@ -159,7 +180,7 @@ final class TableBuilder
                     }
                 }
                 // Only include non-hidden columns in the row data
-                if (!isset($table['hidden']) || $table['hidden'] !== true) {
+                if (! isset($table['hidden']) || $table['hidden'] !== true) {
                     if (isset($table['description'])) {
                         $table['description']($item);
                         $tables['rows'][$keyI][$table['id']] = [
@@ -224,6 +245,11 @@ final class TableBuilder
         } else {
             $query->orWhereRaw('LOWER('.$column.') LIKE ?', ['%'.strtolower($value).'%']);
         }
+    }
+
+    private function addNestedOrWhereHasCallback(Builder $query, string $column, callable $callback, string $value): void
+    {
+        $callback($query, $column, $value);
     }
 
     public function noActions($noAction = true): self
@@ -307,6 +333,7 @@ final class TableBuilder
             // Handle separator arrays directly
             if (is_array($action) && isset($action['type']) && $action['type'] === 'separator') {
                 $processed[] = $action;
+
                 continue;
             }
 

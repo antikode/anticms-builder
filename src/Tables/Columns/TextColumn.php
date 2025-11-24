@@ -50,7 +50,7 @@ class TextColumn
         return $this;
     }
 
-    public function searchable(bool $state = true): self
+    public function searchable(bool|Closure $state = true): self
     {
         $this->column['searchable'] = $state;
 
