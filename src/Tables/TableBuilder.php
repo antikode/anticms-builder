@@ -82,19 +82,19 @@ final class TableBuilder
             });
         }
 
-        $searchableCallbacks = Arr::where($originalHeaders, function ($header) {
-            return isset($header['searchable']) && is_callable($header['searchable']);
-        });
-
-        if (count($searchableCallbacks) > 0) {
-            $query->when($request->filled('q'), function (Builder $q) use ($request, $searchableCallbacks) {
-                $q->where(function (Builder $query) use ($request, $searchableCallbacks) {
-                    foreach ($searchableCallbacks as $header) {
-                        $this->addNestedOrWhereHasCallback($query, $header['column'], $header['searchable'], $request->q);
-                    }
-                });
-            });
-        }
+        // $searchableCallbacks = Arr::where($originalHeaders, function ($header) {
+        //     return isset($header['searchable']) && is_callable($header['searchable']);
+        // });
+        //
+        // if (count($searchableCallbacks) > 0) {
+        //     $query->when($request->filled('q'), function (Builder $q) use ($request, $searchableCallbacks) {
+        //         $q->where(function (Builder $query) use ($request, $searchableCallbacks) {
+        //             foreach ($searchableCallbacks as $header) {
+        //                 $this->addNestedOrWhereHasCallback($query, $header['column'], $header['searchable'], $request->q);
+        //             }
+        //         });
+        //     });
+        // }
 
         if ($request->has(['field', 'direction'])) {
             $field = $request->field;
@@ -240,10 +240,10 @@ final class TableBuilder
             $relationPath = implode('.', $parts);
 
             $query->orWhereHas($relationPath, function ($q2) use ($field, $value) {
-                $q2->whereRaw('LOWER('.$field.') LIKE ?', ['%'.strtolower($value).'%']);
+                $q2->whereRaw("{$field} LIKE ?", ['%'.strtolower($value).'%']);
             });
         } else {
-            $query->orWhereRaw('LOWER('.$column.') LIKE ?', ['%'.strtolower($value).'%']);
+            $query->orWhereRaw("{$column} LIKE ?", ['%'.strtolower($value).'%']);
         }
     }
 
